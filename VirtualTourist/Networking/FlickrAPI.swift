@@ -13,7 +13,7 @@ import Foundation
 
 class FlickrAPI {
     
-    static var photoURLStringArray:[String] = []
+    static var flickURLArray:[URL] = []
     
     struct UserInfo {
         static let apikey = "f966f92b0e383ff5e2807efe3be9891f"
@@ -28,7 +28,7 @@ class FlickrAPI {
     
     enum Endpoints {
         case searchText(String)
-        case searchGeo(Float, Float)
+        case searchGeo(lat: Float, lon: Float)
         
         var url:URL? {
             var components = URLComponents()
@@ -45,7 +45,7 @@ class FlickrAPI {
             case .searchText(let text):
                 items.append(URLQueryItem(name: "text", value: text))
                 break
-            case .searchGeo(let lon, let lat):
+            case .searchGeo(let lat, let lon):
                 items.append(URLQueryItem(name: "lat", value: "\(lat)"))
                 items.append(URLQueryItem(name: "lon", value: "\(lon)"))
                 break
@@ -62,6 +62,30 @@ class FlickrAPI {
 
 extension FlickrAPI {
     
+    class func geoSearchFlickr(latitude: Float, longitude: Float, completion: @escaping (Bool, Error?) -> Void) {
+        
+        guard let url = Endpoints.searchGeo(lat: latitude, lon: longitude).url else {
+            completion(false, FlickrError.urlError)
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data else {
+                completion(false, error)
+                return
+            }
+            
+            do {
+                let response = try JSONDecoder().decode(FlickrSearchResponse.self, from: data)
+                flickURLArray = createURLArray(response: response)
+                completion(true, nil)
+            } catch {
+                completion(false, error)
+            }
+        }
+        task.resume()
+    }
+    
     class func textSearchFlickr(text: String, completion: @escaping (Bool, Error?) -> Void) {
         
         guard let url = Endpoints.searchText(text).url else {
@@ -71,14 +95,14 @@ extension FlickrAPI {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
-                print("bad data")
+                completion(false, error)
                 return
             }
             
             do {
-                let json = try JSONDecoder().decode(FlickrSearchResponse.self, from: data)
-                let urlString = photoURLStringsArrayForSearchResponse(response: json)
-                print(urlString)
+                let response = try JSONDecoder().decode(FlickrSearchResponse.self, from: data)
+                flickURLArray = createURLArray(response: response)
+                completion(true, nil)
             } catch {
                 completion(false, error)
             }
@@ -90,10 +114,8 @@ extension FlickrAPI {
 extension FlickrAPI {
     
     // parse FlickrSearchResponse and return url strings formatter per Flickr API docs
-    static func photoURLStringsArrayForSearchResponse(response: FlickrSearchResponse) -> [URL] {
+    static func createURLArray(response: FlickrSearchResponse) -> [URL] {
         
-        //https://live.staticflickr.com/{server-id}/{id}_{secret}.jpg
-
         let photos = response.photos
         let photo = photos.photo
         
@@ -111,7 +133,6 @@ extension FlickrAPI {
                 urlArray.append(url)
             }
         }
-        
         return urlArray
     }
 }

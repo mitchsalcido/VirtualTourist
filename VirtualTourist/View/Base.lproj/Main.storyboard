@@ -17,21 +17,31 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="ZD9-kF-mJl">
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="qub-1r-Q98">
                                 <rect key="frame" x="0.0" y="88" width="414" height="774"/>
-                            </mapView>
+                                <subviews>
+                                    <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="ZD9-kF-mJl">
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="387"/>
+                                    </mapView>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="kWu-aQ-Muz">
+                                        <rect key="frame" x="0.0" y="387" width="414" height="387"/>
+                                    </imageView>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="ZD9-kF-mJl" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="3Jn-Ew-ZTY"/>
-                            <constraint firstItem="ZD9-kF-mJl" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="AKx-xH-7db"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ZD9-kF-mJl" secondAttribute="trailing" id="PzJ-Sl-6pE"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="ZD9-kF-mJl" secondAttribute="bottom" id="jiV-lO-Vl3"/>
+                            <constraint firstItem="qub-1r-Q98" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="2w9-fW-LCZ"/>
+                            <constraint firstAttribute="bottomMargin" secondItem="qub-1r-Q98" secondAttribute="bottom" id="B32-SX-niw"/>
+                            <constraint firstItem="qub-1r-Q98" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="EmB-jg-824"/>
+                            <constraint firstItem="qub-1r-Q98" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="R1p-Q0-ggS"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="Ifq-xB-cJW"/>
                     <connections>
+                        <outlet property="imageView" destination="kWu-aQ-Muz" id="58s-Vl-W37"/>
+                        <outlet property="mapView" destination="ZD9-kF-mJl" id="vtY-km-GYz"/>
                         <segue destination="47T-uI-LGq" kind="show" identifier="AlbumSegueID" id="hgs-c3-kpK"/>
                     </connections>
                 </viewController>
