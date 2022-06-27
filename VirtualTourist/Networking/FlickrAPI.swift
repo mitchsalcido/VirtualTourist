@@ -13,6 +13,8 @@ import Foundation
 
 class FlickrAPI {
     
+    static var photoURLStringArray:[String] = []
+    
     struct UserInfo {
         static let apikey = "f966f92b0e383ff5e2807efe3be9891f"
     }
@@ -21,6 +23,7 @@ class FlickrAPI {
         static let scheme = "https"
         static let host = "www.flickr.com"
         static let path = "/services/rest/"
+        static let urlHost = "live.staticflickr.com"
     }
     
     enum Endpoints {
@@ -66,8 +69,6 @@ extension FlickrAPI {
             return
         }
         
-        print(url)
-        
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
                 print("bad data")
@@ -75,20 +76,42 @@ extension FlickrAPI {
             }
             
             do {
-                let json = try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
-                print("good brute force json")
-                print(json)
+                let json = try JSONDecoder().decode(FlickrSearchResponse.self, from: data)
+                let urlString = photoURLStringsArrayForSearchResponse(response: json)
+                print(urlString)
             } catch {
-                print("bad brute force json")
-            }
-            
-            do {
-                let _ = try JSONDecoder().decode(FlickrSearchResponse.self, from: data)
-                print("good json")
-            } catch {
-                print("bad json")
+                completion(false, error)
             }
         }
         task.resume()
+    }
+}
+
+extension FlickrAPI {
+    
+    // parse FlickrSearchResponse and return url strings formatter per Flickr API docs
+    static func photoURLStringsArrayForSearchResponse(response: FlickrSearchResponse) -> [URL] {
+        
+        //https://live.staticflickr.com/{server-id}/{id}_{secret}.jpg
+
+        let photos = response.photos
+        let photo = photos.photo
+        
+        var urlArray:[URL] = []
+        var components = URLComponents()
+        components.scheme = APIInfo.scheme
+        components.host = APIInfo.urlHost
+        for flick in photo {
+            let server = flick.server
+            let id = flick.id
+            let secret = flick.secret
+            let path = "/" + server + "/" + id + "_" + secret + ".jpg"
+            components.path = path
+            if let url = components.url {
+                urlArray.append(url)
+            }
+        }
+        
+        return urlArray
     }
 }
