@@ -10,10 +10,15 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
+    // ref to core data stack/controller
+    var coreDataController:CoreDataController!
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        // set up core data
+        coreDataController = CoreDataController(name: "FlickrDataModel")
+        coreDataController.load()
+        
         return true
     }
 
