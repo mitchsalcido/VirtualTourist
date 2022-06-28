@@ -18,6 +18,8 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     var urlStrings:[String] = []
     var flicks:[UIImage] = []
     
+    var flicksToDelete:Set<IndexPath> = []
+    
     let CellSpacing:CGFloat = 5.0
     let CellsPerRow:CGFloat = 5.0
     
@@ -40,8 +42,10 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
-        collectionView.reloadData()
         
+        flicksToDelete.removeAll()
+        collectionView.reloadData()
+
         if editing {
             navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
             navigationItem.leftBarButtonItem?.isEnabled = false
@@ -55,19 +59,32 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
 extension AlbumCollectionViewController {
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return flicks.count
+        return urlStrings.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
+
         // Configure the cell
-        cell.imageView.image = flicks[indexPath.row]
+        if indexPath.row < flicks.count {
+            cell.imageView.image = flicks[indexPath.row]
+            cell.activityIndicator.stopAnimating()
+        } else {
+            cell.activityIndicator.startAnimating()
+        }
         
         if isEditing {
             cell.imageView.alpha = 0.75
+            
+            if flicksToDelete.contains(indexPath) {
+                cell.checkmarkImageView.isHidden = false
+            } else {
+                cell.checkmarkImageView.isHidden = true
+            }
         } else {
             cell.imageView.alpha = 1.0
+            cell.checkmarkImageView.isHidden = true
         }
         
         return cell
@@ -76,31 +93,22 @@ extension AlbumCollectionViewController {
 
 // MARK: UICollectionViewDelegate
 extension AlbumCollectionViewController {
-
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        
-        if let cell = collectionView.cellForItem(at: indexPath) {
-            if cell.isSelected {
-                print("should: isSelected true")
-                collectionView.deselectItem(at: indexPath, animated: false)
-                return false
-            } else {
-                print("should: isSelected false")
-                return true
-            }
-        }
-        return true
-    }
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
-        if let cell = collectionView.cellForItem(at: indexPath) {
-            if cell.isSelected {
-                print("did: isSelected true")
-            } else {
-                print("did: isSelected false")
-            }
+        if !self.isEditing {
+            return
         }
+        
+        if flicksToDelete.contains(indexPath) {
+            flicksToDelete.remove(indexPath)
+        } else {
+            flicksToDelete.insert(indexPath)
+        }
+        
+        navigationItem.leftBarButtonItem?.isEnabled = !flicksToDelete.isEmpty
+        
+        collectionView.reloadItems(at: [indexPath])
     }
 }
 
@@ -138,6 +146,26 @@ extension AlbumCollectionViewController {
 extension AlbumCollectionViewController {
     
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
-        print("trashBbiPresed")
+        
+        let updates = {
+            
+            var indexPaths = self.flicksToDelete.sorted()
+            indexPaths = indexPaths.reversed()
+            for indexPath in indexPaths {
+                self.urlStrings.remove(at: indexPath.row)
+                self.flicks.remove(at: indexPath.row)
+            }
+            
+            self.collectionView.reloadSections(IndexSet(integer: 0))
+            self.setEditing(false, animated: false)
+        }
+        
+        collectionView.performBatchUpdates(updates) { success in
+            if success {
+                print("Success !!")
+            } else {
+                print("Fail !!")
+            }
+        }
     }
 }

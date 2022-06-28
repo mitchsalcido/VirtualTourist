@@ -76,18 +76,30 @@
                                     <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="xji-he-Ath">
+                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="DefaultImage" translatesAutoresizingMaskIntoConstraints="NO" id="xji-he-Ath">
                                             <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                         </imageView>
+                                        <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="CellCheckmark" translatesAutoresizingMaskIntoConstraints="NO" id="8YE-pv-2R2">
+                                            <rect key="frame" x="101" y="101" width="22" height="22"/>
+                                        </imageView>
+                                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="xXF-Rv-91M">
+                                            <rect key="frame" x="54" y="54" width="20" height="20"/>
+                                        </activityIndicatorView>
                                     </subviews>
                                     <constraints>
-                                        <constraint firstItem="xji-he-Ath" firstAttribute="leading" secondItem="0dQ-9E-cRY" secondAttribute="leading" id="IJI-kW-knC"/>
-                                        <constraint firstItem="xji-he-Ath" firstAttribute="top" secondItem="0dQ-9E-cRY" secondAttribute="top" id="hdk-os-9qb"/>
-                                        <constraint firstAttribute="trailing" secondItem="xji-he-Ath" secondAttribute="trailing" id="kEH-zo-rTz"/>
-                                        <constraint firstAttribute="bottom" secondItem="xji-he-Ath" secondAttribute="bottom" id="qe2-kT-Zqr"/>
+                                        <constraint firstAttribute="trailing" secondItem="8YE-pv-2R2" secondAttribute="trailing" constant="5" id="64l-6H-RSi"/>
+                                        <constraint firstItem="xXF-Rv-91M" firstAttribute="centerY" secondItem="0dQ-9E-cRY" secondAttribute="centerY" id="BxW-gm-TT7"/>
+                                        <constraint firstItem="xji-he-Ath" firstAttribute="leading" secondItem="0dQ-9E-cRY" secondAttribute="leading" id="ETl-Wz-EYy"/>
+                                        <constraint firstAttribute="bottom" secondItem="xji-he-Ath" secondAttribute="bottom" id="lDe-bq-R8u"/>
+                                        <constraint firstAttribute="trailing" secondItem="xji-he-Ath" secondAttribute="trailing" id="oLF-I5-4p2"/>
+                                        <constraint firstAttribute="bottom" secondItem="8YE-pv-2R2" secondAttribute="bottom" constant="5" id="umm-jQ-PbK"/>
+                                        <constraint firstItem="xji-he-Ath" firstAttribute="top" secondItem="0dQ-9E-cRY" secondAttribute="top" id="vvd-9g-hqD"/>
+                                        <constraint firstItem="xXF-Rv-91M" firstAttribute="centerX" secondItem="0dQ-9E-cRY" secondAttribute="centerX" id="wjb-mb-EtJ"/>
                                     </constraints>
                                 </collectionViewCellContentView>
                                 <connections>
+                                    <outlet property="activityIndicator" destination="xXF-Rv-91M" id="IZg-Bu-BMK"/>
+                                    <outlet property="checkmarkImageView" destination="8YE-pv-2R2" id="BxY-zp-giH"/>
                                     <outlet property="imageView" destination="xji-he-Ath" id="wZa-3n-FGe"/>
                                 </connections>
                             </collectionViewCell>
@@ -151,6 +163,8 @@
         </scene>
     </scenes>
     <resources>
+        <image name="CellCheckmark" width="22" height="22"/>
+        <image name="DefaultImage" width="128" height="128"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
