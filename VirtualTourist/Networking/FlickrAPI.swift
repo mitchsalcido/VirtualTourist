@@ -15,7 +15,7 @@ import CoreLocation
 
 class FlickrAPI {
     
-    static let MAX_FLICKS = 20
+    static let MAX_FLICKS = 50
     static var flickURLStringArray:[String] = []
 
     struct UserInfo {
@@ -135,6 +135,7 @@ extension FlickrAPI {
         var photo = photos.photo
         var urlStringArray:[String] = []
         
+        print("flicks found count: \(photo.count)")
         if photo.count > MAX_FLICKS {
             var smallerArray:[PhotoResponse] = []
             for index in 0..<MAX_FLICKS {

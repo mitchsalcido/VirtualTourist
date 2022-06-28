@@ -80,11 +80,9 @@ extension MapViewController {
             return
         }
         if control == view.leftCalloutAccessoryView {
-            print("left callout")
             mapView.removeAnnotation(annotation)
         } else {
-            print("right callout")
-            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.photosURLString)
+            performSegue(withIdentifier: "AlbumSegueID", sender: annotation)
         }
     }
 }
@@ -94,8 +92,7 @@ extension MapViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "AlbumSegueID" {
             let controller = segue.destination as! AlbumCollectionViewController
-            controller.urlStrings = sender as! [String]
-            print(sender as! [String])
+            controller.flickrAnnotation = sender as? FlickrAnnotation
         }
     }
 }

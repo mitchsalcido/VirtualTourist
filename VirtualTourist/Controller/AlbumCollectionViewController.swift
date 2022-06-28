@@ -15,7 +15,9 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
         
     var emptyBbi: UIBarButtonItem!
     
-    var urlStrings:[String] = []
+    var flickrAnnotation:FlickrAnnotation!
+    
+    //var urlStrings:[String] = []
     var flicks:[UIImage] = []
     
     var flicksToDelete:Set<IndexPath> = []
@@ -29,7 +31,7 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
         
-        if urlStrings.count > 0 {
+        if flickrAnnotation.photosURLString.count > 0 {
             navigationItem.rightBarButtonItem = editButtonItem
         }
 
@@ -59,7 +61,7 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
 extension AlbumCollectionViewController {
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return urlStrings.count
+        return flickrAnnotation.photosURLString.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -126,7 +128,7 @@ extension AlbumCollectionViewController {
 extension AlbumCollectionViewController {
     
     fileprivate func downloadFlicks() {
-        for urlString in urlStrings {
+        for urlString in flickrAnnotation.photosURLString {
             if let url = URL(string: urlString) {
                 
                 FlickrAPI.getFlick(url: url) { image, error in
@@ -152,7 +154,7 @@ extension AlbumCollectionViewController {
             var indexPaths = self.flicksToDelete.sorted()
             indexPaths = indexPaths.reversed()
             for indexPath in indexPaths {
-                self.urlStrings.remove(at: indexPath.row)
+                self.flickrAnnotation.photosURLString.remove(at: indexPath.row)
                 self.flicks.remove(at: indexPath.row)
             }
             
