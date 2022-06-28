@@ -10,4 +10,6 @@ import UIKit
 class AlbumCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var imageView: UIImageView!
+    
+    var markedForDeletion = false
 }

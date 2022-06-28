@@ -14,7 +14,6 @@ import MapKit
 class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
-    @IBOutlet weak var imageView: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,9 +31,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let annotation = FlickrAnnotation(coordinate: coordinate)
         annotation.title = "Mitch"
         mapView.addAnnotation(annotation)
-        
-        imageView.alpha = 0.5
-        
+                
         FlickrAPI.geoSearchFlickr(latitude: coordinate.latitude, longitude: coordinate.longitude) { success, error in
             if success {
                 
@@ -43,17 +40,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 }
                 
                 annotation.photosURLString = FlickrAPI.flickURLStringArray
-                
-                let urlString = FlickrAPI.flickURLStringArray[Int.random(in: 0..<FlickrAPI.flickURLStringArray.count)]
-                
-                guard let url = URL(string: urlString) else {
-                    return
-                }
-                
-                FlickrAPI.getFlick(url: url) { image, error in
-                    self.imageView.alpha = 1.0
-                    self.imageView.image = image
-                }
             }
         }
     }

@@ -12,46 +12,39 @@ private let reuseIdentifier = "AlbumCellID"
 class AlbumCollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
 
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    
     var urlStrings:[String] = []
     var flicks:[UIImage] = []
     
-    let CellSpacing:CGFloat = 2.0
+    let CellSpacing:CGFloat = 5.0
     let CellsPerRow:CGFloat = 5.0
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        for urlString in urlStrings {
-            if let url = URL(string: urlString) {
-                
-                FlickrAPI.getFlick(url: url) { image, error in
-                    if let image = image {
-                        self.flicks.append(image)
-                        self.collectionView.insertItems(at: [IndexPath(row: self.flicks.count - 1, section: 0)])
-                    }
-                }
-            }
+        flowLayout.minimumLineSpacing = CellSpacing
+        flowLayout.minimumInteritemSpacing = CellSpacing
+        
+        if urlStrings.count > 0 {
+            navigationItem.rightBarButtonItem = editButtonItem
         }
-        // Register cell classes
-        /*
-        self.collectionView!.register(AlbumCollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-         */
+
+        downloadFlicks()
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        flowLayout.invalidateLayout()
     }
-    */
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        collectionView.reloadData()
+    }
+}
 
-    // MARK: UICollectionViewDataSource
+// MARK: UICollectionViewDataSource
+extension AlbumCollectionViewController {
+    
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return flicks.count
     }
@@ -61,67 +54,73 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     
         // Configure the cell
         cell.imageView.image = flicks[indexPath.row]
+        
+        if isEditing {
+            cell.imageView.alpha = 0.75
+        } else {
+            cell.imageView.alpha = 1.0
+        }
+        
         return cell
     }
-    
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        
-        flowLayout.minimumLineSpacing = CellSpacing
-        flowLayout.minimumInteritemSpacing = CellSpacing
-        let widthForCellsInRow:CGFloat = collectionView.bounds.width - (CellsPerRow - 1.0) * CellSpacing
-        flowLayout.itemSize = CGSize(width: widthForCellsInRow / CellsPerRow, height: widthForCellsInRow / CellsPerRow)
-    }
-    // MARK: UICollectionViewDelegate
-
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-    
-    }
-     */
 }
 
-/*
+// MARK: UICollectionViewDelegate
 extension AlbumCollectionViewController {
 
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: CellSpacing, left: CellSpacing, bottom: CellSpacing, right: CellSpacing)
+    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        
+        if let cell = collectionView.cellForItem(at: indexPath) {
+            if cell.isSelected {
+                print("should: isSelected true")
+                collectionView.deselectItem(at: indexPath, animated: false)
+                return false
+            } else {
+                print("should: isSelected false")
+                return true
+            }
+        }
+        return true
     }
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let collectionViewWidth = collectionView.bounds.width - (CellsPerRow - 1.0) * CellSpacing
-        return CGSize(width: collectionViewWidth/CellsPerRow, height: collectionViewWidth/CellsPerRow)
-    }
-
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
-    }
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
+        if let cell = collectionView.cellForItem(at: indexPath) {
+            if cell.isSelected {
+                print("did: isSelected true")
+            } else {
+                print("did: isSelected false")
+            }
+        }
     }
 }
 
-*/
+// MARK: UICollectionViewDelegateFlowLayout
+extension AlbumCollectionViewController {
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        let size = collectionView.bounds.width - (CellsPerRow - 1.0) * CellSpacing
+        return CGSize(width: size / CellsPerRow, height: size / CellsPerRow)
+    }
+}
+
+// MARK: Helpers
+extension AlbumCollectionViewController {
+    
+    fileprivate func downloadFlicks() {
+        for urlString in urlStrings {
+            if let url = URL(string: urlString) {
+                
+                FlickrAPI.getFlick(url: url) { image, error in
+                    if let image = image {
+                        // good image. Add to collectionView
+                        let indexPath = IndexPath(row: self.flicks.count, section:0)
+                        self.flicks.append(image)
+                        self.collectionView.insertItems(at: [indexPath])
+                    }
+                }
+            }
+        }
+    }
+}
