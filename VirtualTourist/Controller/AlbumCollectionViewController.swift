@@ -16,9 +16,7 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     var emptyBbi: UIBarButtonItem!
     
     var flickrAnnotation:FlickrAnnotation!
-    
-    //var urlStrings:[String] = []
-    var flicks:[UIImage] = []
+
     
     var flicksToDelete:Set<IndexPath> = []
     
@@ -27,7 +25,7 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
         
@@ -35,7 +33,11 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
             navigationItem.rightBarButtonItem = editButtonItem
         }
 
-        downloadFlicks()
+        if flickrAnnotation.downloadedFlicks.count != flickrAnnotation.photosURLString.count {
+            
+            flickrAnnotation.downloadedFlicks = []
+            downloadFlicks()
+        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -67,15 +69,14 @@ extension AlbumCollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-
         // Configure the cell
-        if indexPath.row < flicks.count {
-            cell.imageView.image = flicks[indexPath.row]
+        if indexPath.row < flickrAnnotation.downloadedFlicks.count {
+            cell.imageView.image = flickrAnnotation.downloadedFlicks[indexPath.row]
             cell.activityIndicator.stopAnimating()
         } else {
             cell.activityIndicator.startAnimating()
         }
-        
+
         if isEditing {
             cell.imageView.alpha = 0.75
             
@@ -134,8 +135,8 @@ extension AlbumCollectionViewController {
                 FlickrAPI.getFlick(url: url) { image, error in
                     if let image = image {
                         // good image. Add to collectionView
-                        let indexPath = IndexPath(row: self.flicks.count, section:0)
-                        self.flicks.append(image)
+                        let indexPath = IndexPath(row: self.flickrAnnotation.downloadedFlicks.count, section:0)
+                        self.flickrAnnotation.downloadedFlicks.append(image)
                         self.collectionView.insertItems(at: [indexPath])
                     }
                 }
@@ -155,19 +156,14 @@ extension AlbumCollectionViewController {
             indexPaths = indexPaths.reversed()
             for indexPath in indexPaths {
                 self.flickrAnnotation.photosURLString.remove(at: indexPath.row)
-                self.flicks.remove(at: indexPath.row)
+                self.flickrAnnotation.downloadedFlicks.remove(at: indexPath.row)
             }
             
             self.collectionView.reloadSections(IndexSet(integer: 0))
             self.setEditing(false, animated: false)
         }
         
-        collectionView.performBatchUpdates(updates) { success in
-            if success {
-                print("Success !!")
-            } else {
-                print("Fail !!")
-            }
+        collectionView.performBatchUpdates(updates) { _ in
         }
     }
 }

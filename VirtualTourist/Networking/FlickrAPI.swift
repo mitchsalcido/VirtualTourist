@@ -77,7 +77,7 @@ extension FlickrAPI {
                 completion(false, error)
                 return
             }
-            flickURLStringArray = createURLStringArray(response: response)
+            flickURLStringArray = createRandomURLStringArray(response: response)
             completion(true, nil)
         }
     }
@@ -129,26 +129,31 @@ extension FlickrAPI {
 extension FlickrAPI {
     
     // parse FlickrSearchResponse and return url strings formatted per Flickr API docs
-    class func createURLStringArray(response: FlickrSearchResponse) -> [String] {
+    class func createRandomURLStringArray(response: FlickrSearchResponse) -> [String] {
         
-        let photos = response.photos
-        var photo = photos.photo
-        var urlStringArray:[String] = []
+        var photo = response.photos.photo
         
-        print("flicks found count: \(photo.count)")
-        if photo.count > MAX_FLICKS {
-            var smallerArray:[PhotoResponse] = []
-            for index in 0..<MAX_FLICKS {
-                smallerArray.append(photo[index])
-            }
-            photo = smallerArray
+        // random photo responses
+        var randomPhotoArray:[PhotoResponse] = []
+        while photo.count > 0 {
+            let randomIndex = Int.random(in: 0..<photo.count)
+            print("randomIndex: \(randomIndex)")
+            randomPhotoArray.append(photo.remove(at: randomIndex))
         }
         
-        for flick in photo {
+        if randomPhotoArray.count > MAX_FLICKS {
+            var smallerArray:[PhotoResponse] = []
+            for index in 0..<MAX_FLICKS {
+                smallerArray.append(randomPhotoArray[index])
+            }
+            randomPhotoArray = smallerArray
+        }
+        
+        var urlStringArray:[String] = []
+        for flick in randomPhotoArray {
             let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"
             urlStringArray.append(urlString)
         }
-        
         return urlStringArray
     }
 }
