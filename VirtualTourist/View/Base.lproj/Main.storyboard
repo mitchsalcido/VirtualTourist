@@ -24,6 +24,7 @@
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="774"/>
                                         <gestureRecognizers/>
                                         <connections>
+                                            <outlet property="delegate" destination="BYZ-38-t0r" id="ibc-vF-sI6"/>
                                             <outletCollection property="gestureRecognizers" destination="rC5-aY-WMS" appends="YES" id="I3d-By-pVm"/>
                                         </connections>
                                     </mapView>
@@ -111,29 +112,6 @@
                     </collectionView>
                     <navigationItem key="navigationItem" id="bmz-vf-Qkh">
                         <nil key="title"/>
-                        <view key="titleView" contentMode="scaleToFill" id="qfY-hW-j93">
-                            <rect key="frame" x="207" y="22" width="0.0" height="0.0"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <subviews>
-                                <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="xp0-4S-gA2">
-                                    <rect key="frame" x="-75" y="-2" width="150" height="4"/>
-                                </progressView>
-                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="62o-oG-aTS">
-                                    <rect key="frame" x="-29" y="-14.5" width="58" height="29"/>
-                                    <fontDescription key="fontDescription" name="Kailasa-Bold" family="Kailasa" pointSize="22"/>
-                                    <nil key="textColor"/>
-                                    <nil key="highlightedColor"/>
-                                </label>
-                            </subviews>
-                            <color key="backgroundColor" systemColor="systemMintColor"/>
-                            <constraints>
-                                <constraint firstItem="xp0-4S-gA2" firstAttribute="centerX" secondItem="62o-oG-aTS" secondAttribute="centerX" id="L6G-Kr-bbJ"/>
-                                <constraint firstItem="xp0-4S-gA2" firstAttribute="centerY" secondItem="qfY-hW-j93" secondAttribute="centerY" id="Quv-F6-Yg4"/>
-                                <constraint firstItem="62o-oG-aTS" firstAttribute="centerX" secondItem="qfY-hW-j93" secondAttribute="centerX" id="Z8O-XX-0Q4"/>
-                                <constraint firstItem="xp0-4S-gA2" firstAttribute="leading" secondItem="qfY-hW-j93" secondAttribute="leading" constant="-75" id="bs1-zm-4N3"/>
-                                <constraint firstItem="62o-oG-aTS" firstAttribute="centerY" secondItem="qfY-hW-j93" secondAttribute="centerY" id="vTN-eD-Cbp"/>
-                            </constraints>
-                        </view>
                     </navigationItem>
                     <connections>
                         <outlet property="flowLayout" destination="PpZ-kE-HmL" id="mSF-ax-uWt"/>
@@ -167,9 +145,6 @@
         <image name="DefaultImage" width="128" height="128"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemMintColor">
-            <color red="0.0" green="0.7803921568627451" blue="0.74509803921568629" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

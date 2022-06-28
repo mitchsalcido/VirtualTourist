@@ -63,11 +63,6 @@ extension FlickrAPI {
     
     class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, Error?) -> Void) {
         
-        let location = CLLocation(latitude: latitude, longitude: longitude)
-        let geoCoder = CLGeocoder()
-        geoCoder.reverseGeocodeLocation(location) { placemarks, error in
-        }
-        
         guard let url = Endpoints.searchGeo(lat: latitude, lon: longitude).url else {
             completion(false, FlickrError.urlError)
             return
@@ -96,6 +91,34 @@ extension FlickrAPI {
             }
         }
         task.resume()
+    }
+    
+    class func reverseGeoCode(location: CLLocation, completion: @escaping (String?, Error?) -> Void) {
+        
+        let geoCoder = CLGeocoder()
+        geoCoder.reverseGeocodeLocation(location) { placemarks, error in
+            
+            guard let placeMark = placemarks?.first else {
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
+                return
+            }
+            
+            var name = "Unknown"
+            if let local = placeMark.locality {
+                name = local
+            } else if let local = placeMark.administrativeArea {
+                name = local
+            } else if let local = placeMark.country {
+                name = local
+            } else if let local = placeMark.ocean {
+                name = local
+            }
+            DispatchQueue.main.async {
+                completion(name, nil)
+            }
+        }
     }
 }
 
@@ -137,7 +160,6 @@ extension FlickrAPI {
         var randomPhotoArray:[PhotoResponse] = []
         while photo.count > 0 {
             let randomIndex = Int.random(in: 0..<photo.count)
-            print("randomIndex: \(randomIndex)")
             randomPhotoArray.append(photo.remove(at: randomIndex))
         }
         

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 private let reuseIdentifier = "AlbumCellID"
 
@@ -37,6 +38,11 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
             
             flickrAnnotation.downloadedFlicks = []
             downloadFlicks()
+        }
+        
+        let coord = CLLocation(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude)
+        FlickrAPI.reverseGeoCode(location: coord) { string, error in
+            self.title = string
         }
     }
     
@@ -129,6 +135,7 @@ extension AlbumCollectionViewController {
 extension AlbumCollectionViewController {
     
     fileprivate func downloadFlicks() {
+        
         for urlString in flickrAnnotation.photosURLString {
             if let url = URL(string: urlString) {
                 
@@ -151,7 +158,6 @@ extension AlbumCollectionViewController {
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
         
         let updates = {
-            
             var indexPaths = self.flicksToDelete.sorted()
             indexPaths = indexPaths.reversed()
             for indexPath in indexPaths {
