@@ -7,20 +7,38 @@
 
 import UIKit
 
-private let reuseIdentifier = "Cell"
+private let reuseIdentifier = "AlbumCellID"
 
-class AlbumCollectionViewController: UICollectionViewController {
+class AlbumCollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
 
+    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    var urlStrings:[String] = []
+    var flicks:[UIImage] = []
+    
+    let CellSpacing:CGFloat = 2.0
+    let CellsPerRow:CGFloat = 5.0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
+        for urlString in urlStrings {
+            if let url = URL(string: urlString) {
+                
+                FlickrAPI.getFlick(url: url) { image, error in
+                    if let image = image {
+                        self.flicks.append(image)
+                        self.collectionView.insertItems(at: [IndexPath(row: self.flicks.count - 1, section: 0)])
+                    }
+                }
+            }
+        }
         // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-
-        // Do any additional setup after loading the view.
+        /*
+        self.collectionView!.register(AlbumCollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+         */
     }
 
     /*
@@ -34,24 +52,26 @@ class AlbumCollectionViewController: UICollectionViewController {
     */
 
     // MARK: UICollectionViewDataSource
-
-    override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 0
-    }
-
-
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 0
+        return flicks.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
         // Configure the cell
-    
+        cell.imageView.image = flicks[indexPath.row]
         return cell
     }
-
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        
+        flowLayout.minimumLineSpacing = CellSpacing
+        flowLayout.minimumInteritemSpacing = CellSpacing
+        let widthForCellsInRow:CGFloat = collectionView.bounds.width - (CellsPerRow - 1.0) * CellSpacing
+        flowLayout.itemSize = CGSize(width: widthForCellsInRow / CellsPerRow, height: widthForCellsInRow / CellsPerRow)
+    }
     // MARK: UICollectionViewDelegate
 
     /*
@@ -81,6 +101,27 @@ class AlbumCollectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
     
     }
-    */
-
+     */
 }
+
+/*
+extension AlbumCollectionViewController {
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: CellSpacing, left: CellSpacing, bottom: CellSpacing, right: CellSpacing)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let collectionViewWidth = collectionView.bounds.width - (CellsPerRow - 1.0) * CellSpacing
+        return CGSize(width: collectionViewWidth/CellsPerRow, height: collectionViewWidth/CellsPerRow)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+}
+
+*/

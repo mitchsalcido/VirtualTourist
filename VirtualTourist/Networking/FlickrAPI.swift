@@ -11,9 +11,11 @@
 
 import Foundation
 import UIKit
+import CoreLocation
 
 class FlickrAPI {
     
+    static let MAX_FLICKS = 20
     static var flickURLStringArray:[String] = []
 
     struct UserInfo {
@@ -24,7 +26,6 @@ class FlickrAPI {
         static let scheme = "https"
         static let host = "www.flickr.com"
         static let path = "/services/rest/"
-        static let urlHost = "live.staticflickr.com"
         static let urlHostBase = "https://live.staticflickr.com/"
     }
     
@@ -61,6 +62,11 @@ class FlickrAPI {
 extension FlickrAPI {
     
     class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, Error?) -> Void) {
+        
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        let geoCoder = CLGeocoder()
+        geoCoder.reverseGeocodeLocation(location) { placemarks, error in
+        }
         
         guard let url = Endpoints.searchGeo(lat: latitude, lon: longitude).url else {
             completion(false, FlickrError.urlError)
@@ -126,8 +132,16 @@ extension FlickrAPI {
     class func createURLStringArray(response: FlickrSearchResponse) -> [String] {
         
         let photos = response.photos
-        let photo = photos.photo
+        var photo = photos.photo
         var urlStringArray:[String] = []
+        
+        if photo.count > MAX_FLICKS {
+            var smallerArray:[PhotoResponse] = []
+            for index in 0..<MAX_FLICKS {
+                smallerArray.append(photo[index])
+            }
+            photo = smallerArray
+        }
         
         for flick in photo {
             let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"

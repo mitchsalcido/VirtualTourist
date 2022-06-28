@@ -29,8 +29,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
         let pressLocation = longPressGr.location(in: mapView)
         let coordinate = mapView.convert(pressLocation, toCoordinateFrom: mapView)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
+        let annotation = FlickrAnnotation(coordinate: coordinate)
         annotation.title = "Mitch"
         mapView.addAnnotation(annotation)
         
@@ -42,6 +41,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 guard FlickrAPI.flickURLStringArray.count > 0 else {
                     return
                 }
+                
+                annotation.photosURLString = FlickrAPI.flickURLStringArray
                 
                 let urlString = FlickrAPI.flickURLStringArray[Int.random(in: 0..<FlickrAPI.flickURLStringArray.count)]
                 
@@ -89,10 +90,26 @@ extension MapViewController {
     
     func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
         
+        guard let annotation = view.annotation as? FlickrAnnotation else {
+            return
+        }
         if control == view.leftCalloutAccessoryView {
             print("left callout")
+            mapView.removeAnnotation(annotation)
         } else {
             print("right callout")
+            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.photosURLString)
+        }
+    }
+}
+
+extension MapViewController {
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "AlbumSegueID" {
+            let controller = segue.destination as! AlbumCollectionViewController
+            controller.urlStrings = sender as! [String]
+            print(sender as! [String])
         }
     }
 }
