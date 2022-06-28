@@ -12,6 +12,8 @@ private let reuseIdentifier = "AlbumCellID"
 class AlbumCollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
 
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+        
+    var emptyBbi: UIBarButtonItem!
     
     var urlStrings:[String] = []
     var flicks:[UIImage] = []
@@ -39,6 +41,13 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         collectionView.reloadData()
+        
+        if editing {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
+            navigationItem.leftBarButtonItem?.isEnabled = false
+        } else {
+            navigationItem.leftBarButtonItem = nil
+        }
     }
 }
 
@@ -122,5 +131,13 @@ extension AlbumCollectionViewController {
                 }
             }
         }
+    }
+}
+
+// MARK: BarButtonItem Actions
+extension AlbumCollectionViewController {
+    
+    @objc func trashBbiPressed(sender: UIBarButtonItem) {
+        print("trashBbiPresed")
     }
 }
