@@ -89,7 +89,7 @@ extension MapViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "AlbumSegueID" {
-            let controller = segue.destination as! AlbumCollectionViewController
+            let controller = segue.destination as! AlbumViewController
             controller.flickrAnnotation = sender as? FlickrAnnotation
         }
     }

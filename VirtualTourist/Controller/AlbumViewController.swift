@@ -10,10 +10,10 @@ import CoreLocation
 
 private let reuseIdentifier = "AlbumCellID"
 
-class AlbumCollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
-
-    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
             
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     var flickrAnnotation:FlickrAnnotation!
 
     
@@ -64,13 +64,13 @@ class AlbumCollectionViewController: UICollectionViewController, UICollectionVie
 }
 
 // MARK: UICollectionViewDataSource
-extension AlbumCollectionViewController {
+extension AlbumViewController {
     
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return flickrAnnotation.photosURLString.count
     }
 
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
         // Configure the cell
@@ -99,9 +99,9 @@ extension AlbumCollectionViewController {
 }
 
 // MARK: UICollectionViewDelegate
-extension AlbumCollectionViewController {
+extension AlbumViewController {
     
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
         if !self.isEditing {
             return
@@ -120,7 +120,7 @@ extension AlbumCollectionViewController {
 }
 
 // MARK: UICollectionViewDelegateFlowLayout
-extension AlbumCollectionViewController {
+extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
@@ -130,7 +130,7 @@ extension AlbumCollectionViewController {
 }
 
 // MARK: Helpers
-extension AlbumCollectionViewController {
+extension AlbumViewController {
     
     fileprivate func downloadFlicks() {
         
@@ -152,7 +152,7 @@ extension AlbumCollectionViewController {
 }
 
 // MARK: BarButtonItem Actions
-extension AlbumCollectionViewController {
+extension AlbumViewController {
     
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
         
