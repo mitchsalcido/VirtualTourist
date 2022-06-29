@@ -13,9 +13,7 @@ private let reuseIdentifier = "AlbumCellID"
 class AlbumCollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
 
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
-        
-    var emptyBbi: UIBarButtonItem!
-    
+            
     var flickrAnnotation:FlickrAnnotation!
 
     
@@ -137,6 +135,7 @@ extension AlbumCollectionViewController {
     fileprivate func downloadFlicks() {
         
         for urlString in flickrAnnotation.photosURLString {
+            
             if let url = URL(string: urlString) {
                 
                 FlickrAPI.getFlick(url: url) { image, error in
