@@ -120,6 +120,9 @@
                                     <outlet property="delegate" destination="POC-S5-Eis" id="kKw-21-LhN"/>
                                 </connections>
                             </collectionView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="MC7-US-iE6">
+                                <rect key="frame" x="188.5" y="429.5" width="37" height="37"/>
+                            </activityIndicatorView>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9c0-4m-otx">
                                 <rect key="frame" x="0.0" y="813" width="414" height="49"/>
                                 <items>
@@ -144,12 +147,15 @@
                             <constraint firstItem="YwH-D5-zqF" firstAttribute="trailing" secondItem="JLM-kj-ga3" secondAttribute="trailing" id="fmN-zG-I2w"/>
                             <constraint firstItem="NRf-GB-2cz" firstAttribute="top" secondItem="YwH-D5-zqF" secondAttribute="top" id="gzI-MM-KnX"/>
                             <constraint firstItem="JLM-kj-ga3" firstAttribute="leading" secondItem="YwH-D5-zqF" secondAttribute="leading" id="mVD-Zf-vs6"/>
+                            <constraint firstItem="MC7-US-iE6" firstAttribute="centerY" secondItem="n9p-wO-CKo" secondAttribute="centerY" id="nM3-oN-URz"/>
+                            <constraint firstItem="MC7-US-iE6" firstAttribute="centerX" secondItem="n9p-wO-CKo" secondAttribute="centerX" id="uO6-dZ-ehV"/>
                             <constraint firstAttribute="trailing" secondItem="9c0-4m-otx" secondAttribute="trailing" id="zHs-3Q-fus"/>
                             <constraint firstItem="9c0-4m-otx" firstAttribute="top" secondItem="JLM-kj-ga3" secondAttribute="bottom" id="zhP-PL-Wrg"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="zHN-pV-RyK"/>
                     <connections>
+                        <outlet property="activityIndicator" destination="MC7-US-iE6" id="oo6-Vt-MPY"/>
                         <outlet property="collectionView" destination="JLM-kj-ga3" id="u2k-sN-p1B"/>
                         <outlet property="flowLayout" destination="U0J-ET-fJ8" id="kyC-IY-EVy"/>
                         <outlet property="progressView" destination="NRf-GB-2cz" id="KHd-vh-rNG"/>

@@ -15,12 +15,11 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
-    
     
     var flickrAnnotation:FlickrAnnotation!
 
-    
     var flicksToDelete:Set<IndexPath> = []
     
     let CellSpacing:CGFloat = 5.0
@@ -77,12 +76,16 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flickrAnnotation.downloadedFlicks = []
         flickrAnnotation.photosURLString = []
         collectionView.reloadData()
+        activityIndicator.startAnimating()
         
-        /*
         FlickrAPI.geoSearchFlickr(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
+            
+            if success {
+                self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
+                self.activityIndicator.stopAnimating()
+                self.downloadFlicks()
+            }
         }
-        downloadFlicks()
-         */
     }
     
 }
