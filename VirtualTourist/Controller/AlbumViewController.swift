@@ -22,8 +22,11 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 
     var flicksToDelete:Set<IndexPath> = []
     
-    let CellSpacing:CGFloat = 5.0
+    var dataSource:[[String:UIImage]] = [[:]]
+    let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
+    
     let CellsPerRow:CGFloat = 5.0
+    let CellSpacing:CGFloat = 5.0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,18 +34,17 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
         
-        if flickrAnnotation.photosURLString.count > 0 {
-            navigationItem.rightBarButtonItem = editButtonItem
-        }
-
-        if flickrAnnotation.downloadedFlicks.count != flickrAnnotation.photosURLString.count {
-            
-            flickrAnnotation.downloadedFlicks = []
+        navigationItem.rightBarButtonItem = editButtonItem
+        
+        if flickrAnnotation.photosURLString.count != flickrAnnotation.downloadedFlicks.count {
+            configureDataSource()
+            collectionView.reloadData()
             downloadFlicks()
+            reloadBbi.isEnabled = false
         } else {
-            
-            reloadBbi.isEnabled = true
+            collectionView.reloadData()
             progressView.isHidden = true
+            reloadBbi.isEnabled = true
         }
         
         let coord = CLLocation(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude)
@@ -60,34 +62,40 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         flicksToDelete.removeAll()
         collectionView.reloadData()
-
+        reloadBbi.isEnabled = !editing
+        
         if editing {
             navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
             navigationItem.leftBarButtonItem?.isEnabled = false
         } else {
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
-
         }
     }
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
-        
+    
         let alert = UIAlertController(title: "Reload New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceesAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
+            
+            self.editButtonItem.isEnabled = false
+            self.reloadBbi.isEnabled = false
             
             self.flickrAnnotation.downloadedFlicks = []
             self.flickrAnnotation.photosURLString = []
             self.collectionView.reloadData()
             self.activityIndicator.startAnimating()
-            
+
             FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: self.flickrAnnotation.coordinate.longitude) { success, error in
                 
                 if success {
-                    self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
                     self.activityIndicator.stopAnimating()
+                    self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
+                    self.configureDataSource()
+                    self.collectionView.reloadData()
                     self.downloadFlicks()
+                    self.editButtonItem.isEnabled = true
                 }
             }
         }
@@ -107,14 +115,14 @@ extension AlbumViewController {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-        // Configure the cell
-        if indexPath.row < flickrAnnotation.downloadedFlicks.count {
-            cell.imageView.image = flickrAnnotation.downloadedFlicks[indexPath.row]
+        let image = flickrAnnotation.downloadedFlicks[indexPath.row]
+        cell.imageView.image = image
+        if image != defaultImage {
             cell.activityIndicator.stopAnimating()
         } else {
             cell.activityIndicator.startAnimating()
         }
-
+        
         if isEditing {
             cell.imageView.alpha = 0.75
             
@@ -173,33 +181,39 @@ extension AlbumViewController {
             return
         }
         
+        var downloadCount:Float = 0.0
         reloadBbi.isEnabled = false
         progressView.isHidden = false
         progressView.progress = 0.0
         
-        for urlString in flickrAnnotation.photosURLString {
+        for (index, urlString) in flickrAnnotation.photosURLString.enumerated() {
             
             if let url = URL(string: urlString) {
                 
+                let flickIndex = index
                 FlickrAPI.getFlick(url: url) { image, error in
-                    
                     if let image = image {
-                        // good image. Add to collectionView
-                        let indexPath = IndexPath(row: self.flickrAnnotation.downloadedFlicks.count, section:0)
-                        self.flickrAnnotation.downloadedFlicks.append(image)
-                        self.collectionView.insertItems(at: [indexPath])
-                        
-                        let count = Float(self.flickrAnnotation.downloadedFlicks.count)
-                        let progress = count / total
-                        if count == total {
+                        self.flickrAnnotation.downloadedFlicks[flickIndex] = image
+                        let indexPath = IndexPath(row: flickIndex, section: 0)
+                        self.collectionView.reloadItems(at: [indexPath])
+                        downloadCount += 1.0
+                        if downloadCount == total {
                             self.progressView.isHidden = true
                             self.reloadBbi.isEnabled = true
                         } else {
-                            self.progressView.progress = progress
+                            self.progressView.progress = downloadCount / total
                         }
                     }
                 }
             }
+        }
+    }
+    
+    func configureDataSource() {
+    
+        flickrAnnotation.downloadedFlicks.removeAll()
+        for _ in flickrAnnotation.photosURLString {
+            flickrAnnotation.downloadedFlicks.append(defaultImage)
         }
     }
 }
@@ -225,3 +239,4 @@ extension AlbumViewController {
         }
     }
 }
+
