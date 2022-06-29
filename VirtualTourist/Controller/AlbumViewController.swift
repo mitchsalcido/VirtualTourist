@@ -73,21 +73,28 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
         
-        flickrAnnotation.downloadedFlicks = []
-        flickrAnnotation.photosURLString = []
-        collectionView.reloadData()
-        activityIndicator.startAnimating()
-        
-        FlickrAPI.geoSearchFlickr(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
+        let alert = UIAlertController(title: "Reload New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        let proceesAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            if success {
-                self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
-                self.activityIndicator.stopAnimating()
-                self.downloadFlicks()
+            self.flickrAnnotation.downloadedFlicks = []
+            self.flickrAnnotation.photosURLString = []
+            self.collectionView.reloadData()
+            self.activityIndicator.startAnimating()
+            
+            FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: self.flickrAnnotation.coordinate.longitude) { success, error in
+                
+                if success {
+                    self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
+                    self.activityIndicator.stopAnimating()
+                    self.downloadFlicks()
+                }
             }
         }
+        alert.addAction(proceesAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true)
     }
-    
 }
 
 // MARK: UICollectionViewDataSource
