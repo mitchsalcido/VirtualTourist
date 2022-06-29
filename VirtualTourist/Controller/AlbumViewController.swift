@@ -12,8 +12,12 @@ private let reuseIdentifier = "AlbumCellID"
 
 class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
             
+    @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    @IBOutlet weak var reloadBbi: UIBarButtonItem!
+    
+    
     var flickrAnnotation:FlickrAnnotation!
 
     
@@ -36,6 +40,10 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             
             flickrAnnotation.downloadedFlicks = []
             downloadFlicks()
+        } else {
+            
+            reloadBbi.isEnabled = true
+            progressView.isHidden = true
         }
         
         let coord = CLLocation(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude)
@@ -59,8 +67,24 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             navigationItem.leftBarButtonItem?.isEnabled = false
         } else {
             navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
+
         }
     }
+    
+    @IBAction func reloadBbiPressed(_ sender: Any) {
+        
+        flickrAnnotation.downloadedFlicks = []
+        flickrAnnotation.photosURLString = []
+        collectionView.reloadData()
+        
+        /*
+        FlickrAPI.geoSearchFlickr(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
+        }
+        downloadFlicks()
+         */
+    }
+    
 }
 
 // MARK: UICollectionViewDataSource
@@ -134,16 +158,35 @@ extension AlbumViewController {
     
     fileprivate func downloadFlicks() {
         
+        let total = Float(flickrAnnotation.photosURLString.count)
+        guard total > 0.0 else {
+            return
+        }
+        
+        reloadBbi.isEnabled = false
+        progressView.isHidden = false
+        progressView.progress = 0.0
+        
         for urlString in flickrAnnotation.photosURLString {
             
             if let url = URL(string: urlString) {
                 
                 FlickrAPI.getFlick(url: url) { image, error in
+                    
                     if let image = image {
                         // good image. Add to collectionView
                         let indexPath = IndexPath(row: self.flickrAnnotation.downloadedFlicks.count, section:0)
                         self.flickrAnnotation.downloadedFlicks.append(image)
                         self.collectionView.insertItems(at: [indexPath])
+                        
+                        let count = Float(self.flickrAnnotation.downloadedFlicks.count)
+                        let progress = count / total
+                        if count == total {
+                            self.progressView.isHidden = true
+                            self.reloadBbi.isEnabled = true
+                        } else {
+                            self.progressView.progress = progress
+                        }
                     }
                 }
             }
