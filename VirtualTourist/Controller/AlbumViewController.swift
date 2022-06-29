@@ -28,6 +28,12 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     let CellsPerRow:CGFloat = 5.0
     let CellSpacing:CGFloat = 5.0
     
+    enum UIState {
+        case editing
+        case downloading
+        case normal
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -39,12 +45,11 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         if flickrAnnotation.photosURLString.count != flickrAnnotation.downloadedFlicks.count {
             configureDataSource()
             collectionView.reloadData()
+            updateUI(state: .downloading)
             downloadFlicks()
-            reloadBbi.isEnabled = false
         } else {
             collectionView.reloadData()
-            progressView.isHidden = true
-            reloadBbi.isEnabled = true
+            updateUI(state: .normal)
         }
         
         let coord = CLLocation(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude)
@@ -62,14 +67,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         flicksToDelete.removeAll()
         collectionView.reloadData()
-        reloadBbi.isEnabled = !editing
         
         if editing {
             navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
             navigationItem.leftBarButtonItem?.isEnabled = false
+            updateUI(state: .editing)
         } else {
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
+            updateUI(state: .normal)
         }
     }
     
@@ -79,25 +83,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceesAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            self.editButtonItem.isEnabled = false
-            self.reloadBbi.isEnabled = false
-            
-            self.flickrAnnotation.downloadedFlicks = []
-            self.flickrAnnotation.photosURLString = []
-            self.collectionView.reloadData()
-            self.activityIndicator.startAnimating()
-
-            FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: self.flickrAnnotation.coordinate.longitude) { success, error in
-                
-                if success {
-                    self.activityIndicator.stopAnimating()
-                    self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
-                    self.configureDataSource()
-                    self.collectionView.reloadData()
-                    self.downloadFlicks()
-                    self.editButtonItem.isEnabled = true
-                }
-            }
+            self.reloadAlbum()
         }
         alert.addAction(proceesAction)
         alert.addAction(cancelAction)
@@ -182,7 +168,6 @@ extension AlbumViewController {
         }
         
         var downloadCount:Float = 0.0
-        reloadBbi.isEnabled = false
         progressView.isHidden = false
         progressView.progress = 0.0
         
@@ -199,7 +184,7 @@ extension AlbumViewController {
                         downloadCount += 1.0
                         if downloadCount == total {
                             self.progressView.isHidden = true
-                            self.reloadBbi.isEnabled = true
+                            self.updateUI(state: .normal)
                         } else {
                             self.progressView.progress = downloadCount / total
                         }
@@ -209,11 +194,50 @@ extension AlbumViewController {
         }
     }
     
+    fileprivate func reloadAlbum() {
+        
+        updateUI(state: .downloading)
+        flickrAnnotation.downloadedFlicks = []
+        flickrAnnotation.photosURLString = []
+        collectionView.reloadData()
+        activityIndicator.startAnimating()
+        
+        FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
+            
+            if success {
+                self.activityIndicator.stopAnimating()
+                self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
+                self.configureDataSource()
+                self.collectionView.reloadData()
+                self.downloadFlicks()
+            }
+        }
+    }
+    
     func configureDataSource() {
     
         flickrAnnotation.downloadedFlicks.removeAll()
         for _ in flickrAnnotation.photosURLString {
             flickrAnnotation.downloadedFlicks.append(defaultImage)
+        }
+    }
+    
+    func updateUI(state: UIState) {
+        
+        switch state {
+        case .editing:
+            let bbi = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
+            navigationItem.leftBarButtonItem = bbi
+            navigationItem.leftBarButtonItem?.isEnabled = false
+            reloadBbi.isEnabled = false
+        case .downloading:
+            editButtonItem.isEnabled = false
+            reloadBbi.isEnabled = false
+        case .normal:
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
+            editButtonItem.isEnabled = true
+            reloadBbi.isEnabled = true
         }
     }
 }
