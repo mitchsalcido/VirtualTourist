@@ -47,8 +47,7 @@ extension CoreDataController {
             
             let newObject = ObjectType(context: context)
             completion(newObject)
-            if let _ = try? context.save() {
-            }
+            if let _ = try? context.save() {}
         }
     }
     
