@@ -11,13 +11,13 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // ref to core data stack/controller
-    var coreDataController:CoreDataController!
+    var dataController:CoreDataController!
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         // set up core data
-        coreDataController = CoreDataController(name: "FlickrDataModel")
-        coreDataController.load()
+        dataController = CoreDataController(name: "FlickrDataModel")
+        dataController.load()
         
         return true
     }
