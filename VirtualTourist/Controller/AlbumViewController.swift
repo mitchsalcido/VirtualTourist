@@ -39,14 +39,10 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
-        
         navigationItem.rightBarButtonItem = editButtonItem
         
         if flickrAnnotation.photosURLString.count != flickrAnnotation.downloadedFlicks.count {
-            configureDataSource()
-            collectionView.reloadData()
-            updateUI(state: .downloading)
-            downloadFlicks()
+            reloadAlbum()
         } else {
             collectionView.reloadData()
             updateUI(state: .normal)
@@ -79,13 +75,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
     
-        let alert = UIAlertController(title: "Reload New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        let proceesAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
+        let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
             self.reloadAlbum()
         }
-        alert.addAction(proceesAction)
+        alert.addAction(proceedAction)
         alert.addAction(cancelAction)
         present(alert, animated: true)
     }
@@ -103,25 +99,15 @@ extension AlbumViewController {
     
         let image = flickrAnnotation.downloadedFlicks[indexPath.row]
         cell.imageView.image = image
-        if image != defaultImage {
-            cell.activityIndicator.stopAnimating()
-        } else {
+        if image == defaultImage {
             cell.activityIndicator.startAnimating()
-        }
-        
-        if isEditing {
-            cell.imageView.alpha = 0.75
-            
-            if flicksToDelete.contains(indexPath) {
-                cell.checkmarkImageView.isHidden = false
-            } else {
-                cell.checkmarkImageView.isHidden = true
-            }
         } else {
-            cell.imageView.alpha = 1.0
-            cell.checkmarkImageView.isHidden = true
+            cell.activityIndicator.stopAnimating()
         }
         
+        cell.imageView.alpha = isEditing ? 0.75 : 1.0
+        cell.checkmarkImageView.isHidden = flicksToDelete.contains(indexPath) ? false : true
+
         return cell
     }
 }
@@ -159,41 +145,7 @@ extension AlbumViewController {
 
 // MARK: Helpers
 extension AlbumViewController {
-    
-    fileprivate func downloadFlicks() {
-        
-        let total = Float(flickrAnnotation.photosURLString.count)
-        guard total > 0.0 else {
-            return
-        }
-        
-        var downloadCount:Float = 0.0
-        progressView.isHidden = false
-        progressView.progress = 0.0
-        
-        for (index, urlString) in flickrAnnotation.photosURLString.enumerated() {
-            
-            if let url = URL(string: urlString) {
-                
-                let flickIndex = index
-                FlickrAPI.getFlick(url: url) { image, error in
-                    if let image = image {
-                        self.flickrAnnotation.downloadedFlicks[flickIndex] = image
-                        let indexPath = IndexPath(row: flickIndex, section: 0)
-                        self.collectionView.reloadItems(at: [indexPath])
-                        downloadCount += 1.0
-                        if downloadCount == total {
-                            self.progressView.isHidden = true
-                            self.updateUI(state: .normal)
-                        } else {
-                            self.progressView.progress = downloadCount / total
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
+
     fileprivate func reloadAlbum() {
         
         updateUI(state: .downloading)
@@ -205,11 +157,45 @@ extension AlbumViewController {
         FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
             
             if success {
+                
                 self.activityIndicator.stopAnimating()
                 self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
                 self.configureDataSource()
                 self.collectionView.reloadData()
-                self.downloadFlicks()
+                
+                self.progressView.isHidden = false
+                self.progressView.progress = 0.0
+                
+                var downloadCount:Float = 0.0
+                let lastFlicksIndex = Float(self.flickrAnnotation.photosURLString.count - 1)
+                
+                self.downloadFlicks { index, image in
+                    
+                    self.flickrAnnotation.downloadedFlicks[index] = image
+                    let indexPath = IndexPath(row: index, section: 0)
+                    self.collectionView.reloadItems(at: [indexPath])
+                    
+                    if downloadCount == lastFlicksIndex {
+                        self.progressView.isHidden = true
+                        self.updateUI(state: .normal)
+                    } else {
+                        downloadCount += 1.0
+                        self.progressView.progress = downloadCount / lastFlicksIndex
+                    }
+                }
+            }
+        }
+    }
+    
+    fileprivate func downloadFlicks(completion: @escaping (Int, UIImage) -> Void) {
+        
+        for (index, urlString) in flickrAnnotation.photosURLString.enumerated() {
+            if let url = URL(string: urlString) {
+                FlickrAPI.getFlick(url: url) { image, error in
+                    if let image = image {
+                        completion(index, image)
+                    }
+                }
             }
         }
     }
