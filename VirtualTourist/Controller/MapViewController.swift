@@ -10,7 +10,6 @@ import MapKit
 
 // San Fran: 37.7749° N, -122.4194° W
 // Chico CA: 39.73° N, -121.84° W
-
 class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
@@ -77,7 +76,6 @@ extension MapViewController {
             
             pinView.animatesWhenAdded = true
         }
-        
         return pinView
     }
     

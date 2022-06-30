@@ -19,10 +19,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
     
     var flickrAnnotation:FlickrAnnotation!
-
     var flicksToDelete:Set<IndexPath> = []
-    
-    var dataSource:[[String:UIImage]] = [[:]]
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
     
     let CellsPerRow:CGFloat = 5.0
@@ -166,7 +163,10 @@ extension AlbumViewController {
                 
                 self.flickrAnnotation.photosURLData = FlickrAPI.flickURLStringArray
 
-                self.configureDataSource()
+                for _ in self.flickrAnnotation.photosURLData {
+                    self.flickrAnnotation.downloadedFlicks.append(self.defaultImage)
+                }
+                
                 self.collectionView.reloadData()
                 
                 self.progressView.isHidden = false
@@ -204,14 +204,6 @@ extension AlbumViewController {
                     }
                 }
             }
-        }
-    }
-    
-    func configureDataSource() {
-    
-        flickrAnnotation.downloadedFlicks.removeAll()
-        for _ in flickrAnnotation.photosURLData {
-            flickrAnnotation.downloadedFlicks.append(defaultImage)
         }
     }
     

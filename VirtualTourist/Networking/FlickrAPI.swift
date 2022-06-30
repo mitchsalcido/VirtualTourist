@@ -151,31 +151,25 @@ extension FlickrAPI {
 
 extension FlickrAPI {
     
-    // parse FlickrSearchResponse and return url strings formatted per Flickr API docs
+    // parse FlickrSearchResponse and return url string/title formatted per Flickr API docs
     class func createRandomURLStringArray(response: FlickrSearchResponse) -> [[String:String]] {
         
+        // array of flicks
         var photo = response.photos.photo
         
-        // random photo responses
+        // random photo responses, limited to MAX_FLICKS
         var randomPhotoArray:[PhotoResponse] = []
-        while photo.count > 0 {
+        while (photo.count > 0) && (randomPhotoArray.count < MAX_FLICKS) {
             let randomIndex = Int.random(in: 0..<photo.count)
             randomPhotoArray.append(photo.remove(at: randomIndex))
         }
         
-        if randomPhotoArray.count > MAX_FLICKS {
-            var smallerArray:[PhotoResponse] = []
-            for index in 0..<MAX_FLICKS {
-                smallerArray.append(randomPhotoArray[index])
-            }
-            randomPhotoArray = smallerArray
-        }
-        
+        // create return array -> [[URLString:FlickTitle]]
         var urlStringArray:[[String:String]] = []
         for (index, flick) in randomPhotoArray.enumerated() {
             
+            // per Flickr API
             let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"
-            
             let title = (flick.title == "") ? ("Flick: \(index)") : flick.title
             urlStringArray.append([urlString:title])
         }
