@@ -7,8 +7,11 @@
 
 import Foundation
 import MapKit
+import CoreData
 
 class FlickrAnnotation: NSObject, MKAnnotation {
+    
+    var album:Album?
     
     var coordinate: CLLocationCoordinate2D
     var title: String?

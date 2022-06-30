@@ -34,3 +34,33 @@ class CoreDataController {
         viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
     }
 }
+
+
+// MARK: Adding/Deleting Managed Objects
+extension CoreDataController {
+    
+    func newManagedObject<ObjectType:NSManagedObject>(objectType:ObjectType.Type, completion: @escaping (ObjectType) -> Void) {
+        
+        container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            
+            let newObject = ObjectType(context: context)
+            completion(newObject)
+            if let _ = try? context.save() {
+            }
+        }
+    }
+    
+    func deleteObject(object: NSManagedObject) {
+        let objectID = object.objectID
+        container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            
+            let object = context.object(with: objectID)
+            context.delete(object)
+            if let _ = try? context.save() {}
+        }
+    }
+}

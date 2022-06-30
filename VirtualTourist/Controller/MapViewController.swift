@@ -7,15 +7,43 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 // San Fran: 37.7749° N, -122.4194° W
 // Chico CA: 39.73° N, -121.84° W
 class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
+    var dataController:CoreDataController!
+    var albums:[Album] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
+        
+        loadAnnotations()
+    }
+    
+    fileprivate func loadAnnotations() {
+        
+        mapView.removeAnnotations(mapView.annotations)
+        
+        let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
+        do {
+            albums = try dataController.viewContext.fetch(fetchRequest)
+        } catch {
+            print("bad try fetch Album")
+        }
+        
+        for album in albums {
+            let coordinate = CLLocationCoordinate2D(latitude: album.latitude, longitude: album.longitude)
+            let annotation = FlickrAnnotation(coordinate: coordinate)
+            annotation.title = album.name
+            annotation.album = album
+            mapView.addAnnotation(annotation)
+        }
     }
     
     @IBAction func longPressInMapViewDetected(_ sender: Any) {
@@ -36,6 +64,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 annotation.title = "Unknown"
             }
             self.mapView.addAnnotation(annotation)
+            
+            self.dataController.newManagedObject(objectType: Album.self) { album in
+                album.latitude = coordinate.latitude
+                album.longitude = coordinate.longitude
+                album.name = annotation.title
+                annotation.album = album
+            }
         }
         
         FlickrAPI.geoSearchFlickr(latitude: coordinate.latitude, longitude: coordinate.longitude) { success, error in
@@ -84,7 +119,11 @@ extension MapViewController {
         guard let annotation = view.annotation as? FlickrAnnotation else {
             return
         }
+        
         if control == view.leftCalloutAccessoryView {
+            if let album = annotation.album {
+                dataController.deleteObject(object: album)
+            }
             mapView.removeAnnotation(annotation)
         } else {
             performSegue(withIdentifier: "AlbumSegueID", sender: annotation)
