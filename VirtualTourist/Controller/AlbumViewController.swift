@@ -117,19 +117,21 @@ extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
-        if !self.isEditing {
+        if self.isEditing {
+            
+            if flicksToDelete.contains(indexPath) {
+                flicksToDelete.remove(indexPath)
+            } else {
+                flicksToDelete.insert(indexPath)
+            }
+            
+            navigationItem.leftBarButtonItem?.isEnabled = !flicksToDelete.isEmpty
+            collectionView.reloadItems(at: [indexPath])
+            
             return
         }
         
-        if flicksToDelete.contains(indexPath) {
-            flicksToDelete.remove(indexPath)
-        } else {
-            flicksToDelete.insert(indexPath)
-        }
-        
-        navigationItem.leftBarButtonItem?.isEnabled = !flicksToDelete.isEmpty
-        
-        collectionView.reloadItems(at: [indexPath])
+        print("didSelect: \(indexPath)")
     }
 }
 
