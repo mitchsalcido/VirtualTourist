@@ -27,9 +27,18 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let pressLocation = longPressGr.location(in: mapView)
         let coordinate = mapView.convert(pressLocation, toCoordinateFrom: mapView)
         let annotation = FlickrAnnotation(coordinate: coordinate)
-        annotation.title = "Mitch"
-        mapView.addAnnotation(annotation)
-                
+              
+        let location = CLLocation(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude)
+        FlickrAPI.reverseGeoCode(location: location) { name, error in
+            
+            if let name = name {
+                annotation.title = name
+            } else {
+                annotation.title = "Unknown"
+            }
+            self.mapView.addAnnotation(annotation)
+        }
+        
         FlickrAPI.geoSearchFlickr(latitude: coordinate.latitude, longitude: coordinate.longitude) { success, error in
             if success {
                 
