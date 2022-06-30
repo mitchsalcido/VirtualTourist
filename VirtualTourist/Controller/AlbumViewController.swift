@@ -41,17 +41,14 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumInteritemSpacing = CellSpacing
         navigationItem.rightBarButtonItem = editButtonItem
         
-        if flickrAnnotation.photosURLString.count != flickrAnnotation.downloadedFlicks.count {
+        if flickrAnnotation.photosURLData.count != flickrAnnotation.downloadedFlicks.count {
             reloadAlbum()
         } else {
             collectionView.reloadData()
             updateUI(state: .normal)
         }
         
-        let coord = CLLocation(latitude: flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude)
-        FlickrAPI.reverseGeoCode(location: coord) { string, error in
-            self.title = string
-        }
+        title = flickrAnnotation.title
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -91,7 +88,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return flickrAnnotation.photosURLString.count
+        return flickrAnnotation.photosURLData.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -151,17 +148,19 @@ extension AlbumViewController {
     fileprivate func reloadAlbum() {
         
         updateUI(state: .downloading)
-        flickrAnnotation.downloadedFlicks = []
-        flickrAnnotation.photosURLString = []
+        flickrAnnotation.downloadedFlicks.removeAll()
+        flickrAnnotation.photosURLData.removeAll()
         collectionView.reloadData()
         activityIndicator.startAnimating()
-        
+
         FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
             
             if success {
                 
                 self.activityIndicator.stopAnimating()
-                self.flickrAnnotation.photosURLString = FlickrAPI.flickURLStringArray
+                
+                self.flickrAnnotation.photosURLData = FlickrAPI.flickURLStringArray
+
                 self.configureDataSource()
                 self.collectionView.reloadData()
                 
@@ -169,7 +168,7 @@ extension AlbumViewController {
                 self.progressView.progress = 0.0
                 
                 var downloadCount:Float = 0.0
-                let lastFlicksIndex = Float(self.flickrAnnotation.photosURLString.count - 1)
+                let lastFlicksIndex = Float(self.flickrAnnotation.photosURLData.count - 1)
                 
                 self.downloadFlicks { index, image in
                     
@@ -191,8 +190,8 @@ extension AlbumViewController {
     
     fileprivate func downloadFlicks(completion: @escaping (Int, UIImage) -> Void) {
         
-        for (index, urlString) in flickrAnnotation.photosURLString.enumerated() {
-            if let url = URL(string: urlString) {
+        for (index, urlDict) in flickrAnnotation.photosURLData.enumerated() {
+            if let urlString = urlDict.keys.first, let url = URL(string: urlString) {
                 FlickrAPI.getFlick(url: url) { image, error in
                     if let image = image {
                         completion(index, image)
@@ -205,7 +204,7 @@ extension AlbumViewController {
     func configureDataSource() {
     
         flickrAnnotation.downloadedFlicks.removeAll()
-        for _ in flickrAnnotation.photosURLString {
+        for _ in flickrAnnotation.photosURLData {
             flickrAnnotation.downloadedFlicks.append(defaultImage)
         }
     }
@@ -239,7 +238,7 @@ extension AlbumViewController {
             var indexPaths = self.flicksToDelete.sorted()
             indexPaths = indexPaths.reversed()
             for indexPath in indexPaths {
-                self.flickrAnnotation.photosURLString.remove(at: indexPath.row)
+                self.flickrAnnotation.photosURLData.remove(at: indexPath.row)
                 self.flickrAnnotation.downloadedFlicks.remove(at: indexPath.row)
             }
             

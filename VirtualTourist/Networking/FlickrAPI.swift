@@ -16,7 +16,7 @@ import CoreLocation
 class FlickrAPI {
     
     static let MAX_FLICKS = 50
-    static var flickURLStringArray:[String] = []
+    static var flickURLStringArray:[[String:String]] = []
 
     struct UserInfo {
         static let apikey = "f966f92b0e383ff5e2807efe3be9891f"
@@ -152,7 +152,7 @@ extension FlickrAPI {
 extension FlickrAPI {
     
     // parse FlickrSearchResponse and return url strings formatted per Flickr API docs
-    class func createRandomURLStringArray(response: FlickrSearchResponse) -> [String] {
+    class func createRandomURLStringArray(response: FlickrSearchResponse) -> [[String:String]] {
         
         var photo = response.photos.photo
         
@@ -171,10 +171,13 @@ extension FlickrAPI {
             randomPhotoArray = smallerArray
         }
         
-        var urlStringArray:[String] = []
-        for flick in randomPhotoArray {
+        var urlStringArray:[[String:String]] = []
+        for (index, flick) in randomPhotoArray.enumerated() {
+            
             let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"
-            urlStringArray.append(urlString)
+            
+            let title = (flick.title == "") ? ("Flick: \(index)") : flick.title
+            urlStringArray.append([urlString:title])
         }
         return urlStringArray
     }

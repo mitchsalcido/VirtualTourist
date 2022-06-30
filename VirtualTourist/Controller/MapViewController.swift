@@ -46,7 +46,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     return
                 }
                 
-                annotation.photosURLString = FlickrAPI.flickURLStringArray
+                annotation.photosURLData = FlickrAPI.flickURLStringArray
             }
         }
     }
