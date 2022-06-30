@@ -128,7 +128,11 @@ extension AlbumViewController {
             return
         }
         
-        print("didSelect: \(indexPath)")
+        let flick = flickrAnnotation.downloadedFlicks[indexPath.row]
+        let dictionary = flickrAnnotation.photosURLData[indexPath.row]
+        if let title = dictionary.values.first {
+            performSegue(withIdentifier: "FlickDetailSegueID", sender:[flick:title])
+        }
     }
 }
 
@@ -148,6 +152,7 @@ extension AlbumViewController {
     fileprivate func reloadAlbum() {
         
         updateUI(state: .downloading)
+        collectionView.isUserInteractionEnabled = false
         flickrAnnotation.downloadedFlicks.removeAll()
         flickrAnnotation.photosURLData.removeAll()
         collectionView.reloadData()
@@ -179,6 +184,7 @@ extension AlbumViewController {
                     if downloadCount == lastFlicksIndex {
                         self.progressView.isHidden = true
                         self.updateUI(state: .normal)
+                        self.collectionView.isUserInteractionEnabled = true
                     } else {
                         downloadCount += 1.0
                         self.progressView.progress = downloadCount / lastFlicksIndex
@@ -251,3 +257,12 @@ extension AlbumViewController {
     }
 }
 
+extension AlbumViewController {
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "FlickDetailSegueID" {
+            let controller = segue.destination as! FlickDetailViewController
+            controller.flick = sender as? [UIImage:String]
+        }
+    }
+}

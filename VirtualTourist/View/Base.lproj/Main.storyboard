@@ -160,11 +160,42 @@
                         <outlet property="flowLayout" destination="U0J-ET-fJ8" id="kyC-IY-EVy"/>
                         <outlet property="progressView" destination="NRf-GB-2cz" id="KHd-vh-rNG"/>
                         <outlet property="reloadBbi" destination="dxf-Ht-PtP" id="PxI-re-Rbt"/>
+                        <segue destination="cvz-FM-fJN" kind="show" identifier="FlickDetailSegueID" id="Vlg-Ij-0nh"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3aq-uL-vRZ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1896" y="98"/>
+        </scene>
+        <!--Flick Detail View Controller-->
+        <scene sceneID="Dau-bu-tkJ">
+            <objects>
+                <viewController id="cvz-FM-fJN" customClass="FlickDetailViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="wm9-Xz-cVv">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Kg5-1y-Fdp">
+                                <rect key="frame" x="0.0" y="88" width="414" height="774"/>
+                            </imageView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="iu5-Xe-uDe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="iu5-Xe-uDe" firstAttribute="trailing" secondItem="Kg5-1y-Fdp" secondAttribute="trailing" id="53o-e0-ONs"/>
+                            <constraint firstItem="Kg5-1y-Fdp" firstAttribute="top" secondItem="iu5-Xe-uDe" secondAttribute="top" id="7tq-il-qL0"/>
+                            <constraint firstItem="iu5-Xe-uDe" firstAttribute="bottom" secondItem="Kg5-1y-Fdp" secondAttribute="bottom" id="9MZ-kP-lSF"/>
+                            <constraint firstItem="Kg5-1y-Fdp" firstAttribute="leading" secondItem="iu5-Xe-uDe" secondAttribute="leading" id="LPQ-Qv-YFp"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="0sm-uN-GQB"/>
+                    <connections>
+                        <outlet property="imageView" destination="Kg5-1y-Fdp" id="VQ7-hi-BJt"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="zJ9-oo-Jby" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2906" y="98"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="rv9-nI-Md6">
