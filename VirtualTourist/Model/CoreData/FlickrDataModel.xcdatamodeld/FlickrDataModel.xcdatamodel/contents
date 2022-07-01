@@ -4,13 +4,13 @@
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <relationship name="flick" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Flick" inverseName="album" inverseEntity="Flick"/>
+        <relationship name="flicks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Flick" inverseName="album" inverseEntity="Flick"/>
     </entity>
     <entity name="Flick" representedClassName="Flick" syncable="YES" codeGenerationType="class">
         <attribute name="imageData" optional="YES" attributeType="Binary"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="urlString" optional="YES" attributeType="String"/>
-        <relationship name="album" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Album" inverseName="flick" inverseEntity="Album"/>
+        <relationship name="album" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Album" inverseName="flicks" inverseEntity="Album"/>
     </entity>
     <elements>
         <element name="Album" positionX="-320.72265625" positionY="1.21875" width="128" height="103"/>
