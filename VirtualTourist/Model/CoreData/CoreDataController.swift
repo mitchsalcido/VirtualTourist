@@ -110,9 +110,7 @@ extension CoreDataController {
                         FlickrAPI.getFlickData(url: url) { data, error in
                             if let data = data {
                                 flick.imageData = data
-                                if let _ = try? context.save() {
-                                    print("good imageData save")
-                                }
+                                if let _ = try? context.save() {}
                             }
                         }
                     }
