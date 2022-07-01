@@ -16,7 +16,7 @@ import CoreLocation
 class FlickrAPI {
     
     static let MAX_FLICKS = 50
-    static var flickURLStringArray:[[String:String]] = []
+    static var foundFlicksArray:[[String:String]] = []
 
     struct UserInfo {
         static let apikey = "f966f92b0e383ff5e2807efe3be9891f"
@@ -72,7 +72,7 @@ extension FlickrAPI {
                 completion(false, error)
                 return
             }
-            flickURLStringArray = createRandomURLStringArray(response: response)
+            foundFlicksArray = createRandomURLStringArray(response: response)
             completion(true, nil)
         }
     }
@@ -89,6 +89,18 @@ extension FlickrAPI {
             DispatchQueue.main.async {
                 completion(UIImage(data: data), nil)
             }
+        }
+        task.resume()
+    }
+    
+    class func getFlickData(url: URL, completion: @escaping (Data?, Error?) -> Void) {
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data else {
+                completion(nil, error)
+                return
+            }
+            completion(data, nil)
         }
         task.resume()
     }

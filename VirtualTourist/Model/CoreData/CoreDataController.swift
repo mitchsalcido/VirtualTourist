@@ -63,3 +63,61 @@ extension CoreDataController {
         }
     }
 }
+
+extension CoreDataController {
+    
+    func reloadAlbum(album:Album, completion: @escaping () -> Void) {
+        
+        FlickrAPI.geoSearchFlickr(latitude: album.latitude, longitude: album.longitude) { success, error in
+
+            if success {
+                let objectID = album.objectID
+                self.container.performBackgroundTask { context in
+                    context.automaticallyMergesChangesFromParent = true
+                    context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+                    let privateAlbum = context.object(with: objectID) as! Album
+                    
+                    for dictionary in FlickrAPI.foundFlicksArray {
+                        if let urlString = dictionary.keys.first, let title = dictionary.values.first {
+                            
+                            let flick = Flick(context: context)
+                            flick.urlString = urlString
+                            flick.title = title
+                            flick.album = privateAlbum
+                        }
+                    }
+                    if let _ = try? context.save() {
+                        self.resumeFlickDownload(album: privateAlbum) {
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func resumeFlickDownload(album:Album, completion: @escaping () -> Void) {
+        
+        let objectID = album.objectID
+        self.container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            let privateAlbum = context.object(with: objectID) as! Album
+            
+            if let flicks = privateAlbum.flicks?.allObjects as? [Flick] {
+                for flick in flicks {
+                    
+                    if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
+                        FlickrAPI.getFlickData(url: url) { data, error in
+                            if let data = data {
+                                flick.imageData = data
+                                if let _ = try? context.save() {
+                                    print("good imageData save")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

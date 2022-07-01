@@ -65,22 +65,38 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
             self.mapView.addAnnotation(annotation)
             
+            /*
             self.dataController.newManagedObject(objectType: Album.self) { album in
                 album.latitude = coordinate.latitude
                 album.longitude = coordinate.longitude
                 album.name = annotation.title
                 annotation.album = album
             }
+            */
+            let album = Album(context: self.dataController.viewContext)
+            album.longitude = coordinate.longitude
+            album.latitude = coordinate.latitude
+            album.name = annotation.title
+            annotation.album = album
+            if let _ = try? self.dataController.viewContext.save() {
+                print("good viewContext save")
+            } else {
+                print("bad viewContext save")
+            }
+            
+            self.dataController.reloadAlbum(album: album) {
+                print("reload completion")
+            }
         }
-        
+          
         FlickrAPI.geoSearchFlickr(latitude: coordinate.latitude, longitude: coordinate.longitude) { success, error in
             if success {
                 
-                guard FlickrAPI.flickURLStringArray.count > 0 else {
+                guard FlickrAPI.foundFlicksArray.count > 0 else {
                     return
                 }
                 
-                annotation.photosURLData = FlickrAPI.flickURLStringArray
+                annotation.photosURLData = FlickrAPI.foundFlicksArray
             }
         }
     }
@@ -125,6 +141,9 @@ extension MapViewController {
         if control == view.leftCalloutAccessoryView {
             if let album = annotation.album {
                 dataController.deleteObject(object: album)
+                if let flicks = album.flicks?.allObjects as? [Flick] {
+                    print(flicks.count)
+                }
             }
             mapView.removeAnnotation(annotation)
         } else {

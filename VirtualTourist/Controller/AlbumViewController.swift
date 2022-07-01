@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreLocation
+import CoreData
 
 private let reuseIdentifier = "AlbumCellID"
 
@@ -17,6 +18,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
+    
+    var dataController:CoreDataController!
     
     var flickrAnnotation:FlickrAnnotation!
     var flicksToDelete:Set<IndexPath> = []
@@ -33,6 +36,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
         
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
@@ -46,6 +51,26 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         
         title = flickrAnnotation.title
+        
+        loadFlicks()
+    }
+    
+    fileprivate func loadFlicks() {
+        guard let album = flickrAnnotation.album else {
+            return
+        }
+        
+        let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
+        let predicate = NSPredicate(format: "album = %@", album)
+        fetchRequest.predicate = predicate
+        do {
+            let flicks = try dataController.viewContext.fetch(fetchRequest)
+            for flick in flicks {
+                print("urlString: \(flick.urlString!)")
+            }
+        } catch {
+            print("bad try")
+        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -161,7 +186,7 @@ extension AlbumViewController {
                 
                 self.activityIndicator.stopAnimating()
                 
-                self.flickrAnnotation.photosURLData = FlickrAPI.flickURLStringArray
+                self.flickrAnnotation.photosURLData = FlickrAPI.foundFlicksArray
 
                 for _ in self.flickrAnnotation.photosURLData {
                     self.flickrAnnotation.downloadedFlicks.append(self.defaultImage)
