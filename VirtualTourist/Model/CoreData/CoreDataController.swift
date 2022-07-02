@@ -108,11 +108,16 @@ extension CoreDataController {
                     
                     if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
                         FlickrAPI.getFlickData(url: url) { data, error in
+                            print("downloading flick data")
                             if let data = data {
                                 flick.imageData = data
-                                if let _ = try? context.save() {}
+                                if let _ = try? context.save() {
+                                    print("good download...saved")
+                                }
                             }
                         }
+                    } else {
+                        print("already downloaded flick")
                     }
                 }
             }

@@ -20,6 +20,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
     
     var dataController:CoreDataController!
+    var flicks:[Flick] = []
     
     var flickrAnnotation:FlickrAnnotation!
     var flicksToDelete:Set<IndexPath> = []
@@ -64,10 +65,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let predicate = NSPredicate(format: "album = %@", album)
         fetchRequest.predicate = predicate
         do {
-            let flicks = try dataController.viewContext.fetch(fetchRequest)
-            for flick in flicks {
-                print("urlString: \(flick.urlString!)")
-            }
+            flicks = try dataController.viewContext.fetch(fetchRequest)
+            collectionView.reloadData()
         } catch {
             print("bad try")
         }
@@ -110,18 +109,19 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return flickrAnnotation.photosURLData.count
+        return flicks.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-        let image = flickrAnnotation.downloadedFlicks[indexPath.row]
-        cell.imageView.image = image
-        if image == defaultImage {
-            cell.activityIndicator.startAnimating()
-        } else {
+        let flick = flicks[indexPath.row]
+        if let imageData = flick.imageData {
+            cell.imageView.image = UIImage(data: imageData)
             cell.activityIndicator.stopAnimating()
+        } else {
+            cell.imageView.image = defaultImage
+            cell.activityIndicator.startAnimating()
         }
         
         cell.imageView.alpha = isEditing ? 0.75 : 1.0
@@ -149,12 +149,8 @@ extension AlbumViewController {
             
             return
         }
-        
-        let flick = flickrAnnotation.downloadedFlicks[indexPath.row]
-        let dictionary = flickrAnnotation.photosURLData[indexPath.row]
-        if let title = dictionary.values.first {
-            performSegue(withIdentifier: "FlickDetailSegueID", sender:[flick:title])
-        }
+    
+        performSegue(withIdentifier: "FlickDetailSegueID", sender:flicks[indexPath.row])
     }
 }
 
@@ -279,7 +275,7 @@ extension AlbumViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "FlickDetailSegueID" {
             let controller = segue.destination as! FlickDetailViewController
-            controller.flick = sender as? [UIImage:String]
+            controller.flick = sender as? Flick
         }
     }
 }
