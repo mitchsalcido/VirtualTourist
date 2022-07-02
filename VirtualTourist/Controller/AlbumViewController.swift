@@ -47,6 +47,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         title = flickrAnnotation.title
         updateUI(state: .normal)
         loadFlicks()
+        loadAllFlicks() // debug
     }
     
     fileprivate func loadFlicks() {
@@ -64,6 +65,16 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             collectionView.reloadData()
         } catch {
             print("bad try")
+        }
+    }
+    
+    fileprivate func loadAllFlicks() {
+        let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
+        do {
+            let allFlicks = try dataController.viewContext.fetch(fetchRequest)
+            print("allFlicks count: \(allFlicks.count)")
+        } catch {
+            print("unable to load ALL flicks")
         }
     }
     

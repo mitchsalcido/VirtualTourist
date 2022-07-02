@@ -94,7 +94,14 @@ extension CoreDataController {
 extension CoreDataController {
     
     func reloadAlbum(album:Album, completion: @escaping () -> Void) {
+
+        // delete existing flicks, if any
+        if let flicks = album.flicks?.allObjects as? [Flick] {
+            deleteManagedObjects(objects: flicks) { error in
+            }
+        }
         
+        // new search
         FlickrAPI.geoSearchFlickr(latitude: album.latitude, longitude: album.longitude) { success, error in
 
             if success {
@@ -116,6 +123,12 @@ extension CoreDataController {
                     if let _ = try? context.save() {
                         self.resumeFlickDownload(album: privateAlbum) {
                         }
+                    }
+                }
+            } else {
+                if let _ = error {
+                    DispatchQueue.main.async {
+                        completion()
                     }
                 }
             }
