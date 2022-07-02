@@ -11,7 +11,7 @@ import CoreData
 
 private let reuseIdentifier = "AlbumCellID"
 
-class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, NSFetchedResultsControllerDelegate {
             
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -19,13 +19,15 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
     
+    var fetchedResultsController:NSFetchedResultsController<Flick>!
+    
     var dataController:CoreDataController!
-    var flicks:[Flick] = []
     
     var flickrAnnotation:FlickrAnnotation!
     var flicksToDeleteIndexPaths:Set<IndexPath> = []
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
     
+    var collectionViewBlockOps:[() -> Void]!
     let CellsPerRow:CGFloat = 5.0
     let CellSpacing:CGFloat = 5.0
     
@@ -44,10 +46,31 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumInteritemSpacing = CellSpacing
         navigationItem.rightBarButtonItem = editButtonItem
         
+        collectionView.isUserInteractionEnabled = false
+        
         title = flickrAnnotation.title
         updateUI(state: .normal)
         loadFlicks()
-        loadAllFlicks() // debug
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        flowLayout.invalidateLayout()
+    }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        flicksToDeleteIndexPaths.removeAll()
+        
+        if editing {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
+            navigationItem.leftBarButtonItem?.isEnabled = false
+            updateUI(state: .editing)
+        } else {
+            updateUI(state: .normal)
+        }
+        
+        collectionView.reloadData()
     }
     
     fileprivate func loadFlicks() {
@@ -60,49 +83,27 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let predicate = NSPredicate(format: "album = %@", album)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchedResultsController.delegate = self
         do {
-            flicks = try dataController.viewContext.fetch(fetchRequest)
-            collectionView.reloadData()
+            try fetchedResultsController.performFetch()
         } catch {
-            print("bad try")
-        }
-    }
-    
-    fileprivate func loadAllFlicks() {
-        let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
-        do {
-            let allFlicks = try dataController.viewContext.fetch(fetchRequest)
-            print("allFlicks count: \(allFlicks.count)")
-        } catch {
-            print("unable to load ALL flicks")
-        }
-    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        flowLayout.invalidateLayout()
-    }
-    
-    override func setEditing(_ editing: Bool, animated: Bool) {
-        super.setEditing(editing, animated: animated)
-        
-        flicksToDeleteIndexPaths.removeAll()
-        collectionView.reloadData()
-        
-        if editing {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
-            navigationItem.leftBarButtonItem?.isEnabled = false
-            updateUI(state: .editing)
-        } else {
-            updateUI(state: .normal)
+            print("bad fetch")
         }
     }
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
     
+        guard let album = flickrAnnotation.album else {
+            return
+        }
+        
         let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
+            self.dataController.reloadAlbum(album: album) {
+            }
         }
         alert.addAction(proceedAction)
         alert.addAction(cancelAction)
@@ -114,13 +115,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return flicks.count
+        return fetchedResultsController.sections?[section].numberOfObjects ?? 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-        let flick = flicks[indexPath.row]
+        let flick = fetchedResultsController.object(at: indexPath)
         if let imageData = flick.imageData {
             cell.imageView.image = UIImage(data: imageData)
             cell.activityIndicator.stopAnimating()
@@ -155,7 +156,8 @@ extension AlbumViewController {
             return
         }
     
-        performSegue(withIdentifier: "FlickDetailSegueID", sender:flicks[indexPath.row])
+        let flick = fetchedResultsController.object(at: indexPath)
+        performSegue(withIdentifier: "FlickDetailSegueID", sender:flick)
     }
 }
 
@@ -199,26 +201,15 @@ extension AlbumViewController {
         
         var flicksToDelete:[Flick] = []
         for indexPath in flicksToDeleteIndexPaths {
-            flicksToDelete.append(flicks[indexPath.row])
+            let flick = fetchedResultsController.object(at: indexPath)
+            flicksToDelete.append(flick)
         }
         dataController.deleteManagedObjects(objects: flicksToDelete) { error in
+            
             if error == nil {
-                
-                let updates = {
-                    var indexPaths = self.flicksToDeleteIndexPaths.sorted()
-                    indexPaths = indexPaths.reversed()
-                    for indexPath in indexPaths {
-                        self.flicks.remove(at: indexPath.row)
-                    }
-                    
-                    self.collectionView.reloadSections(IndexSet(integer: 0))
-                    self.setEditing(false, animated: false)
-                }
-                
-                self.collectionView.performBatchUpdates(updates) { _ in
-                }
+                print("good delete")
             } else {
-                print("non-nil error deleting flicks")
+                print("bad delete")
             }
         }
     }
@@ -230,6 +221,28 @@ extension AlbumViewController {
         if segue.identifier == "FlickDetailSegueID" {
             let controller = segue.destination as! FlickDetailViewController
             controller.flick = sender as? Flick
+        }
+    }
+}
+
+extension AlbumViewController {
+
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+       
+        if !flicksToDeleteIndexPaths.isEmpty {
+            collectionView.performBatchUpdates {
+                self.collectionView.deleteItems(at: Array(flicksToDeleteIndexPaths))
+            }
+            setEditing(false, animated: false)
+        }
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        if type == .update {
+            if let indexPath = indexPath {
+                collectionView.reloadItems(at: [indexPath])
+            }
         }
     }
 }

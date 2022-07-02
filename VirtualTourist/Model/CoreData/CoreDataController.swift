@@ -121,7 +121,7 @@ extension CoreDataController {
                         }
                     }
                     if let _ = try? context.save() {
-                        self.resumeFlickDownload(album: privateAlbum) {
+                        self.resumeFlickDownload(album: privateAlbum, context: context) {
                         }
                     }
                 }
@@ -135,8 +135,25 @@ extension CoreDataController {
         }
     }
     
-    func resumeFlickDownload(album:Album, completion: @escaping () -> Void) {
+    func resumeFlickDownload(album:Album, context:NSManagedObjectContext, completion: @escaping () -> Void) {
         
+        let privateAlbum = album
+        if let flicks = privateAlbum.flicks?.allObjects as? [Flick] {
+            for flick in flicks {
+                
+                if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
+                    FlickrAPI.getFlickData(url: url) { data, error in
+                        if let data = data {
+                            flick.imageData = data
+                            if let _ = try? context.save() {}
+                        }
+                    }
+                } else {
+                    print("already downloaded flick")
+                }
+            }
+        }
+        /*
         let objectID = album.objectID
         self.container.performBackgroundTask { context in
             context.automaticallyMergesChangesFromParent = true
@@ -148,12 +165,9 @@ extension CoreDataController {
                     
                     if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
                         FlickrAPI.getFlickData(url: url) { data, error in
-                            print("downloading flick data")
                             if let data = data {
                                 flick.imageData = data
-                                if let _ = try? context.save() {
-                                    print("good download...saved")
-                                }
+                                if let _ = try? context.save() {}
                             }
                         }
                     } else {
@@ -162,5 +176,6 @@ extension CoreDataController {
                 }
             }
         }
+         */
     }
 }
