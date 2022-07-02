@@ -65,14 +65,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
             self.mapView.addAnnotation(annotation)
             
-            /*
-            self.dataController.newManagedObject(objectType: Album.self) { album in
-                album.latitude = coordinate.latitude
-                album.longitude = coordinate.longitude
-                album.name = annotation.title
-                annotation.album = album
-            }
-            */
             let album = Album(context: self.dataController.viewContext)
             album.longitude = coordinate.longitude
             album.latitude = coordinate.latitude
@@ -86,17 +78,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             self.dataController.reloadAlbum(album: album) {
                 print("reload completion")
-            }
-        }
-          
-        FlickrAPI.geoSearchFlickr(latitude: coordinate.latitude, longitude: coordinate.longitude) { success, error in
-            if success {
-                
-                guard FlickrAPI.foundFlicksArray.count > 0 else {
-                    return
-                }
-                
-                annotation.photosURLData = FlickrAPI.foundFlicksArray
             }
         }
     }

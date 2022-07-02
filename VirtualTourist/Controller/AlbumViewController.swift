@@ -23,7 +23,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     var flicks:[Flick] = []
     
     var flickrAnnotation:FlickrAnnotation!
-    var flicksToDelete:Set<IndexPath> = []
+    var flicksToDeleteIndexPaths:Set<IndexPath> = []
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
     
     let CellsPerRow:CGFloat = 5.0
@@ -44,15 +44,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumInteritemSpacing = CellSpacing
         navigationItem.rightBarButtonItem = editButtonItem
         
-        if flickrAnnotation.photosURLData.count != flickrAnnotation.downloadedFlicks.count {
-            reloadAlbum()
-        } else {
-            collectionView.reloadData()
-            updateUI(state: .normal)
-        }
-        
         title = flickrAnnotation.title
-        
+        updateUI(state: .normal)
         loadFlicks()
     }
     
@@ -62,7 +55,9 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         
         let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
+        let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
         let predicate = NSPredicate(format: "album = %@", album)
+        fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
         do {
             flicks = try dataController.viewContext.fetch(fetchRequest)
@@ -79,7 +74,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
-        flicksToDelete.removeAll()
+        flicksToDeleteIndexPaths.removeAll()
         collectionView.reloadData()
         
         if editing {
@@ -97,7 +92,6 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            self.reloadAlbum()
         }
         alert.addAction(proceedAction)
         alert.addAction(cancelAction)
@@ -125,7 +119,7 @@ extension AlbumViewController {
         }
         
         cell.imageView.alpha = isEditing ? 0.75 : 1.0
-        cell.checkmarkImageView.isHidden = flicksToDelete.contains(indexPath) ? false : true
+        cell.checkmarkImageView.isHidden = flicksToDeleteIndexPaths.contains(indexPath) ? false : true
 
         return cell
     }
@@ -138,13 +132,13 @@ extension AlbumViewController {
 
         if self.isEditing {
             
-            if flicksToDelete.contains(indexPath) {
-                flicksToDelete.remove(indexPath)
+            if flicksToDeleteIndexPaths.contains(indexPath) {
+                flicksToDeleteIndexPaths.remove(indexPath)
             } else {
-                flicksToDelete.insert(indexPath)
+                flicksToDeleteIndexPaths.insert(indexPath)
             }
             
-            navigationItem.leftBarButtonItem?.isEnabled = !flicksToDelete.isEmpty
+            navigationItem.leftBarButtonItem?.isEnabled = !flicksToDeleteIndexPaths.isEmpty
             collectionView.reloadItems(at: [indexPath])
             
             return
@@ -166,67 +160,6 @@ extension AlbumViewController {
 
 // MARK: Helpers
 extension AlbumViewController {
-
-    fileprivate func reloadAlbum() {
-        
-        updateUI(state: .downloading)
-        collectionView.isUserInteractionEnabled = false
-        flickrAnnotation.downloadedFlicks.removeAll()
-        flickrAnnotation.photosURLData.removeAll()
-        collectionView.reloadData()
-        activityIndicator.startAnimating()
-
-        FlickrAPI.geoSearchFlickr(latitude: self.flickrAnnotation.coordinate.latitude, longitude: flickrAnnotation.coordinate.longitude) { success, error in
-            
-            if success {
-                
-                self.activityIndicator.stopAnimating()
-                
-                self.flickrAnnotation.photosURLData = FlickrAPI.foundFlicksArray
-
-                for _ in self.flickrAnnotation.photosURLData {
-                    self.flickrAnnotation.downloadedFlicks.append(self.defaultImage)
-                }
-                
-                self.collectionView.reloadData()
-                
-                self.progressView.isHidden = false
-                self.progressView.progress = 0.0
-                
-                var downloadCount:Float = 0.0
-                let lastFlicksIndex = Float(self.flickrAnnotation.photosURLData.count - 1)
-                
-                self.downloadFlicks { index, image in
-                    
-                    self.flickrAnnotation.downloadedFlicks[index] = image
-                    let indexPath = IndexPath(row: index, section: 0)
-                    self.collectionView.reloadItems(at: [indexPath])
-                    
-                    if downloadCount == lastFlicksIndex {
-                        self.progressView.isHidden = true
-                        self.updateUI(state: .normal)
-                        self.collectionView.isUserInteractionEnabled = true
-                    } else {
-                        downloadCount += 1.0
-                        self.progressView.progress = downloadCount / lastFlicksIndex
-                    }
-                }
-            }
-        }
-    }
-    
-    fileprivate func downloadFlicks(completion: @escaping (Int, UIImage) -> Void) {
-        
-        for (index, urlDict) in flickrAnnotation.photosURLData.enumerated() {
-            if let urlString = urlDict.keys.first, let url = URL(string: urlString) {
-                FlickrAPI.getFlick(url: url) { image, error in
-                    if let image = image {
-                        completion(index, image)
-                    }
-                }
-            }
-        }
-    }
     
     func updateUI(state: UIState) {
         
@@ -253,19 +186,29 @@ extension AlbumViewController {
     
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
         
-        let updates = {
-            var indexPaths = self.flicksToDelete.sorted()
-            indexPaths = indexPaths.reversed()
-            for indexPath in indexPaths {
-                self.flickrAnnotation.photosURLData.remove(at: indexPath.row)
-                self.flickrAnnotation.downloadedFlicks.remove(at: indexPath.row)
-            }
-            
-            self.collectionView.reloadSections(IndexSet(integer: 0))
-            self.setEditing(false, animated: false)
+        var flicksToDelete:[Flick] = []
+        for indexPath in flicksToDeleteIndexPaths {
+            flicksToDelete.append(flicks[indexPath.row])
         }
-        
-        collectionView.performBatchUpdates(updates) { _ in
+        dataController.deleteManagedObjects(objects: flicksToDelete) { error in
+            if error == nil {
+                
+                let updates = {
+                    var indexPaths = self.flicksToDeleteIndexPaths.sorted()
+                    indexPaths = indexPaths.reversed()
+                    for indexPath in indexPaths {
+                        self.flicks.remove(at: indexPath.row)
+                    }
+                    
+                    self.collectionView.reloadSections(IndexSet(integer: 0))
+                    self.setEditing(false, animated: false)
+                }
+                
+                self.collectionView.performBatchUpdates(updates) { _ in
+                }
+            } else {
+                print("non-nil error deleting flicks")
+            }
         }
     }
 }

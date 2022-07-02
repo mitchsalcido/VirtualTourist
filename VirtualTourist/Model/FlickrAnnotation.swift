@@ -17,9 +17,6 @@ class FlickrAnnotation: NSObject, MKAnnotation {
     var title: String?
     var subtitle: String?
     
-    var photosURLData:[[String:String]] = []
-    var downloadedFlicks:[UIImage] = []
-    
     init(coordinate: CLLocationCoordinate2D) {
         self.coordinate = coordinate
     }

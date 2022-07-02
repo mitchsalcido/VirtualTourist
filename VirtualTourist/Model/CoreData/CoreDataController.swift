@@ -62,6 +62,33 @@ extension CoreDataController {
             if let _ = try? context.save() {}
         }
     }
+    
+    func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (Error?) -> Void) {
+        
+        var objectIDs:[NSManagedObjectID] = []
+        for object in objects {
+            objectIDs.append(object.objectID)
+        }
+        container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            
+            for objectID in objectIDs {
+                let privateObject = context.object(with: objectID)
+                context.delete(privateObject)
+            }
+            do {
+                try context.save()
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(error)
+                }
+            }
+        }
+    }
 }
 
 extension CoreDataController {
