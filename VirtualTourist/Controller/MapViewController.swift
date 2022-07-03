@@ -34,7 +34,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         do {
             albums = try dataController.viewContext.fetch(fetchRequest)
         } catch {
-            print("bad try fetch Album")
+            showOKAlert(error: error)
         }
         
         for album in albums {
@@ -43,6 +43,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             annotation.title = album.name
             annotation.album = album
             mapView.addAnnotation(annotation)
+            
+            if !album.flickDownloadComplete {
+                dataController.resumeFlickDownload(album: album)
+            }
         }
     }
     
@@ -70,14 +74,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             album.latitude = coordinate.latitude
             album.name = annotation.title
             annotation.album = album
-            if let _ = try? self.dataController.viewContext.save() {
-                print("good viewContext save")
-            } else {
-                print("bad viewContext save")
-            }
+            if let _ = try? self.dataController.viewContext.save() {}
             
-            self.dataController.reloadAlbum(album: album) {
-                print("reload completion")
+            self.dataController.reloadAlbum(album: album) { error in
+                if let error = error {
+                    self.showOKAlert(error: error)
+                }
             }
         }
     }
@@ -120,12 +122,7 @@ extension MapViewController {
         }
         
         if control == view.leftCalloutAccessoryView {
-            if let album = annotation.album {
-                dataController.deleteObject(object: album)
-                if let flicks = album.flicks?.allObjects as? [Flick] {
-                    print(flicks.count)
-                }
-            }
+            dataController.deleteObject(object: annotation.album)
             mapView.removeAnnotation(annotation)
         } else {
             performSegue(withIdentifier: "AlbumSegueID", sender: annotation)

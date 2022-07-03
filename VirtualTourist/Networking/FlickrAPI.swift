@@ -15,7 +15,7 @@ import CoreLocation
 
 class FlickrAPI {
     
-    static let MAX_FLICKS = 250
+    static let MAX_FLICKS = 50
     static var foundFlicksArray:[[String:String]] = []
 
     struct UserInfo {
@@ -176,14 +176,23 @@ extension FlickrAPI {
             randomPhotoArray.append(photo.remove(at: randomIndex))
         }
         
-        // create return array -> [[URLString:FlickTitle]]
-        var urlStringArray:[[String:String]] = []
+        // create a dictionary containing [URLString:Title]
+        var dictionary:[String:String] = [:]
         for (index, flick) in randomPhotoArray.enumerated() {
             
             // per Flickr API
             let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"
             let title = (flick.title == "") ? ("Flick: \(index)") : flick.title
-            urlStringArray.append([urlString:title])
+            
+            dictionary[urlString] = title
+        }
+        
+        // sort by url string..same order that's used in AlbumView
+        var urlStringArray:[[String:String]] = []
+        for key in dictionary.keys.sorted() {
+            if let value = dictionary[key] {
+                urlStringArray.append([key:value])
+            }
         }
         return urlStringArray
     }

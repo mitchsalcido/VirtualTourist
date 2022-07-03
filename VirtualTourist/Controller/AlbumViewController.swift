@@ -18,16 +18,14 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
-    
+    var flickrAnnotation:FlickrAnnotation!
+
     var fetchedResultsController:NSFetchedResultsController<Flick>!
-    
     var dataController:CoreDataController!
     
-    var flickrAnnotation:FlickrAnnotation!
     var flicksToDeleteIndexPaths:Set<IndexPath> = []
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
     
-    var collectionViewBlockOps:[() -> Void]!
     let CellsPerRow:CGFloat = 5.0
     let CellSpacing:CGFloat = 5.0
     
@@ -44,13 +42,11 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         flowLayout.minimumLineSpacing = CellSpacing
         flowLayout.minimumInteritemSpacing = CellSpacing
+        
         navigationItem.rightBarButtonItem = editButtonItem
-        
-        collectionView.isUserInteractionEnabled = false
-        
         title = flickrAnnotation.title
-        updateUI(state: .normal)
-        loadFlicks()
+        
+        performFetch()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -73,14 +69,11 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         collectionView.reloadData()
     }
     
-    fileprivate func loadFlicks() {
-        guard let album = flickrAnnotation.album else {
-            return
-        }
+    fileprivate func performFetch() {
         
         let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
-        let predicate = NSPredicate(format: "album = %@", album)
+        let predicate = NSPredicate(format: "album = %@", flickrAnnotation.album)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
@@ -88,21 +81,25 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         do {
             try fetchedResultsController.performFetch()
         } catch {
-            print("bad fetch")
+            showOKAlert(error: error)
         }
     }
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
-    
-        guard let album = flickrAnnotation.album else {
-            return
-        }
         
         let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            self.dataController.reloadAlbum(album: album) {
+            if let flicks = self.flickrAnnotation.album.flicks?.allObjects as? [Flick] {
+                self.dataController.deleteManagedObjects(objects: flicks) { error in
+                                        
+                    if error == nil {
+                        self.collectionView.reloadData()
+                        self.dataController.reloadAlbum(album: self.flickrAnnotation.album) { error in
+                        }
+                    }
+                }
             }
         }
         alert.addAction(proceedAction)
@@ -157,7 +154,9 @@ extension AlbumViewController {
         }
     
         let flick = fetchedResultsController.object(at: indexPath)
-        performSegue(withIdentifier: "FlickDetailSegueID", sender:flick)
+        if flick.imageData != nil {
+            performSegue(withIdentifier: "FlickDetailSegueID", sender:flick)
+        }
     }
 }
 
@@ -205,11 +204,8 @@ extension AlbumViewController {
             flicksToDelete.append(flick)
         }
         dataController.deleteManagedObjects(objects: flicksToDelete) { error in
-            
-            if error == nil {
-                print("good delete")
-            } else {
-                print("bad delete")
+            if let error = error {
+                self.showOKAlert(error: error)
             }
         }
     }
@@ -234,6 +230,13 @@ extension AlbumViewController {
                 self.collectionView.deleteItems(at: Array(flicksToDeleteIndexPaths))
             }
             setEditing(false, animated: false)
+        }
+        
+        if flickrAnnotation.album.flickDownloadComplete {
+            print("downloadComplete")
+            activityIndicator.stopAnimating()
+            editButtonItem.isEnabled = true
+            reloadBbi.isEnabled = true
         }
     }
 

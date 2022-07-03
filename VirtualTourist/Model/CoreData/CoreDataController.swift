@@ -50,7 +50,7 @@ extension CoreDataController {
             if let _ = try? context.save() {}
         }
     }
-    
+
     func deleteObject(object: NSManagedObject) {
         let objectID = object.objectID
         container.performBackgroundTask { context in
@@ -91,14 +91,16 @@ extension CoreDataController {
     }
 }
 
+// MARK: Loading Album and Flicks
 extension CoreDataController {
     
-    func reloadAlbum(album:Album, completion: @escaping () -> Void) {
+    func reloadAlbum(album:Album, completion: @escaping (Error?) -> Void) {
 
-        // delete existing flicks, if any
-        if let flicks = album.flicks?.allObjects as? [Flick] {
-            deleteManagedObjects(objects: flicks) { error in
-            }
+        let objectID = album.objectID
+        container.performBackgroundTask { context in
+            let album = context.object(with: objectID) as! Album
+            album.flickDownloadComplete = false
+            if let _ = try? context.save() {}
         }
         
         // new search
@@ -121,61 +123,49 @@ extension CoreDataController {
                         }
                     }
                     if let _ = try? context.save() {
-                        self.resumeFlickDownload(album: privateAlbum, context: context) {
-                        }
+                        self.resumeFlickDownload(album: privateAlbum)
                     }
                 }
             } else {
-                if let _ = error {
+                if let error = error {
                     DispatchQueue.main.async {
-                        completion()
+                        completion(error)
                     }
                 }
             }
         }
     }
     
-    func resumeFlickDownload(album:Album, context:NSManagedObjectContext, completion: @escaping () -> Void) {
+    func resumeFlickDownload(album:Album) {
         
-        let privateAlbum = album
-        if let flicks = privateAlbum.flicks?.allObjects as? [Flick] {
-            for flick in flicks {
+        let ojectID = album.objectID
+        self.container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            let privateAlbum = context.object(with: ojectID) as! Album
+            
+            if var flicks = privateAlbum.flicks?.allObjects as? [Flick] {
+                flicks = flicks.sorted(by: {$0.urlString! > $1.urlString!})
                 
-                if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
-                    FlickrAPI.getFlickData(url: url) { data, error in
-                        if let data = data {
+                var count = 0
+                for flick in flicks {
+                    
+                    if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
+                        if let data = try? Data(contentsOf: url) {
                             flick.imageData = data
                             if let _ = try? context.save() {}
                         }
                     }
-                } else {
-                    print("already downloaded flick")
-                }
-            }
-        }
-        /*
-        let objectID = album.objectID
-        self.container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            let privateAlbum = context.object(with: objectID) as! Album
-            
-            if let flicks = privateAlbum.flicks?.allObjects as? [Flick] {
-                for flick in flicks {
                     
-                    if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
-                        FlickrAPI.getFlickData(url: url) { data, error in
-                            if let data = data {
-                                flick.imageData = data
-                                if let _ = try? context.save() {}
-                            }
+                    count += 1
+                    if count == flicks.count {
+                        privateAlbum.flickDownloadComplete = true
+                        if let _ = try? context.save() {
+                            print("download IS compelte")
                         }
-                    } else {
-                        print("already downloaded flick")
                     }
                 }
             }
         }
-         */
     }
 }
