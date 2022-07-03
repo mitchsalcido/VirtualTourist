@@ -26,6 +26,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     var flicksToDeleteIndexPaths:Set<IndexPath> = []
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
+    var downloadedFlickCount:Int = 0
     
     let CellsPerRow:CGFloat = 5.0
     let CellSpacing:CGFloat = 5.0
@@ -50,7 +51,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         configFlickFRC()
         configAlbumFRC()
-        
+        downloadedFlickCount = flickrAnnotation.album.downloadedFlickImageCount()
+
         if flickrAnnotation.album.flickDownloadComplete {
             updateUI(state: .normal)
         } else {
@@ -58,6 +60,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             progressView.isHidden = false
             progressView.progress = 0.5
         }
+        
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -211,24 +214,28 @@ extension AlbumViewController {
             navigationItem.leftBarButtonItem?.isEnabled = false
             reloadBbi.isEnabled = false
             activityIndicator.stopAnimating()
+            progressView.isHidden = true
         case .preDownloading:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
             reloadBbi.isEnabled = false
             activityIndicator.startAnimating()
+            progressView.isHidden = true
         case .downloading:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
             reloadBbi.isEnabled = false
             activityIndicator.stopAnimating()
+            progressView.isHidden = false
         case .normal:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = true
             reloadBbi.isEnabled = true
             activityIndicator.stopAnimating()
+            progressView.isHidden = true
         }
     }
 }
@@ -278,8 +285,9 @@ extension AlbumViewController {
         if controller == albumFetchedResultsController {
             if flickrAnnotation.album.flickDownloadComplete {
                 updateUI(state: .normal)
+                progressView.progress = 0.0
             } else {
-                updateUI(state: .downloading)
+                downloadedFlickCount = flickrAnnotation.album.downloadedFlickImageCount()
             }
         }
     }
@@ -290,6 +298,14 @@ extension AlbumViewController {
             if type == .update {
                 if let indexPath = indexPath {
                     collectionView.reloadItems(at: [indexPath])
+                    
+                    downloadedFlickCount += 1
+                    let total = flickrAnnotation.album.flicks?.count ?? 1
+                    progressView.progress = Float(downloadedFlickCount) / Float(total)
+                    
+                    if (total > 1) && (downloadedFlickCount == 1) {
+                        updateUI(state: .downloading)
+                    }
                 }
             }
         }
