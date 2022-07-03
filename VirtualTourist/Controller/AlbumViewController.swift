@@ -53,13 +53,18 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         configAlbumFRC()
         downloadedFlickCount = flickrAnnotation.album.downloadedFlickImageCount()
 
-        if flickrAnnotation.album.flickDownloadComplete {
-            updateUI(state: .normal)
-        } else {
+        if !flickrAnnotation.album.flickDownloadComplete {
             updateUI(state: .downloading)
             progressView.isHidden = false
             progressView.progress = 0.5
+        } else if flickrAnnotation.album.flickDownloadComplete && (downloadedFlickCount > 0) {
+            updateUI(state: .normal)
+        } else {
+            noFlicksFound()
         }
+    }
+    
+    @objc func noFlicksFound() {
         
     }
     
