@@ -20,7 +20,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
     var flickrAnnotation:FlickrAnnotation!
 
-    var fetchedResultsController:NSFetchedResultsController<Flick>!
+    var flickFetchedResultsController:NSFetchedResultsController<Flick>!
+    var albumFetchedResultsController:NSFetchedResultsController<Album>!
     var dataController:CoreDataController!
     
     var flicksToDeleteIndexPaths:Set<IndexPath> = []
@@ -31,6 +32,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     enum UIState {
         case editing
+        case preDownloading
         case downloading
         case normal
     }
@@ -46,7 +48,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         navigationItem.rightBarButtonItem = editButtonItem
         title = flickrAnnotation.title
         
-        performFetch()
+        configFlickFRC()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -69,34 +71,49 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         collectionView.reloadData()
     }
     
-    fileprivate func performFetch() {
+    fileprivate func configFlickFRC() {
         
         let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
-        let predicate = NSPredicate(format: "album = %@", flickrAnnotation.album)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        fetchRequest.predicate = predicate
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        fetchedResultsController.delegate = self
+        flickFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        flickFetchedResultsController.delegate = self
         do {
-            try fetchedResultsController.performFetch()
+            try flickFetchedResultsController.performFetch()
+        } catch {
+            showOKAlert(error: error)
+        }
+    }
+    
+    fileprivate func configAlbumFRC() {
+        
+        let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        let predicate = NSPredicate(format: "name = %@",)
+        albumFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        albumFetchedResultsController.delegate = self
+        do {
+            try albumFetchedResultsController.performFetch()
         } catch {
             showOKAlert(error: error)
         }
     }
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
-        
+
         let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
             if let flicks = self.flickrAnnotation.album.flicks?.allObjects as? [Flick] {
                 self.dataController.deleteManagedObjects(objects: flicks) { error in
-                                        
+                                                  
                     if error == nil {
                         self.collectionView.reloadData()
+                        self.updateUI(state: .preDownloading)
                         self.dataController.reloadAlbum(album: self.flickrAnnotation.album) { error in
+                            self.updateUI(state: .normal)
                         }
                     }
                 }
@@ -112,13 +129,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return fetchedResultsController.sections?[section].numberOfObjects ?? 0
+        return flickFetchedResultsController.sections?[section].numberOfObjects ?? 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-        let flick = fetchedResultsController.object(at: indexPath)
+        let flick = flickFetchedResultsController.object(at: indexPath)
         if let imageData = flick.imageData {
             cell.imageView.image = UIImage(data: imageData)
             cell.activityIndicator.stopAnimating()
@@ -153,7 +170,7 @@ extension AlbumViewController {
             return
         }
     
-        let flick = fetchedResultsController.object(at: indexPath)
+        let flick = flickFetchedResultsController.object(at: indexPath)
         if flick.imageData != nil {
             performSegue(withIdentifier: "FlickDetailSegueID", sender:flick)
         }
@@ -181,14 +198,25 @@ extension AlbumViewController {
             navigationItem.leftBarButtonItem = bbi
             navigationItem.leftBarButtonItem?.isEnabled = false
             reloadBbi.isEnabled = false
-        case .downloading:
+            activityIndicator.stopAnimating()
+        case .preDownloading:
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
             reloadBbi.isEnabled = false
+            activityIndicator.startAnimating()
+        case .downloading:
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
+            editButtonItem.isEnabled = false
+            reloadBbi.isEnabled = false
+            activityIndicator.stopAnimating()
         case .normal:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = true
             reloadBbi.isEnabled = true
+            activityIndicator.stopAnimating()
         }
     }
 }
@@ -200,7 +228,7 @@ extension AlbumViewController {
         
         var flicksToDelete:[Flick] = []
         for indexPath in flicksToDeleteIndexPaths {
-            let flick = fetchedResultsController.object(at: indexPath)
+            let flick = flickFetchedResultsController.object(at: indexPath)
             flicksToDelete.append(flick)
         }
         dataController.deleteManagedObjects(objects: flicksToDelete) { error in
@@ -232,11 +260,11 @@ extension AlbumViewController {
             setEditing(false, animated: false)
         }
         
-        if flickrAnnotation.album.flickDownloadComplete {
-            print("downloadComplete")
-            activityIndicator.stopAnimating()
-            editButtonItem.isEnabled = true
-            reloadBbi.isEnabled = true
+        if !flickrAnnotation.album.flickDownloadComplete {
+            print("not complete")
+            updateUI(state: .downloading)
+        } else {
+            print("complete")
         }
     }
 
