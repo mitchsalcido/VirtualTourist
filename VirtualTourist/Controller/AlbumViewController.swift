@@ -36,6 +36,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         case preDownloading
         case downloading
         case normal
+        case noFlicksFound
     }
     
     override func viewDidLoad() {
@@ -60,12 +61,16 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         } else if flickrAnnotation.album.flickDownloadComplete && (downloadedFlickCount > 0) {
             updateUI(state: .normal)
         } else {
-            noFlicksFound()
+            updateUI(state: .noFlicksFound)
+            perform(#selector(noFlicksFound), with: nil, afterDelay: 1.0)
         }
     }
     
     @objc func noFlicksFound() {
-        
+        let alert = UIAlertController(title: "No Flicks Found", message: "Unable to locate flicks in this geographic region.", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alert.addAction(okAction)
+        present(alert, animated: true)
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -239,6 +244,13 @@ extension AlbumViewController {
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = true
             reloadBbi.isEnabled = true
+            activityIndicator.stopAnimating()
+            progressView.isHidden = true
+        case .noFlicksFound:
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
+            editButtonItem.isEnabled = false
+            reloadBbi.isEnabled = false
             activityIndicator.stopAnimating()
             progressView.isHidden = true
         }

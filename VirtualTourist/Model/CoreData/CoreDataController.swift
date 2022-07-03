@@ -147,7 +147,6 @@ extension CoreDataController {
             if var flicks = privateAlbum.flicks?.allObjects as? [Flick] {
                 flicks = flicks.sorted(by: {$0.urlString! > $1.urlString!})
                 
-                var count = 0
                 for flick in flicks {
                     
                     if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
@@ -156,13 +155,9 @@ extension CoreDataController {
                             if let _ = try? context.save() {}
                         }
                     }
-                    
-                    count += 1
-                    if count == flicks.count {
-                        privateAlbum.flickDownloadComplete = true
-                        if let _ = try? context.save() {}
-                    }
                 }
+                privateAlbum.flickDownloadComplete = true
+                if let _ = try? context.save() {}
             }
         }
     }
