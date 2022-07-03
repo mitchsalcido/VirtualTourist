@@ -49,6 +49,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         title = flickrAnnotation.title
         
         configFlickFRC()
+        configAlbumFRC()
+        
+        if flickrAnnotation.album.flickDownloadComplete {
+            updateUI(state: .normal)
+        } else {
+            updateUI(state: .downloading)
+        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -75,7 +82,9 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
+        let predicate = NSPredicate(format: "album = %@", flickrAnnotation.album)
         fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchRequest.predicate = predicate
         flickFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         flickFetchedResultsController.delegate = self
         do {
@@ -90,7 +99,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        let predicate = NSPredicate(format: "name = %@",)
+        let predicate = NSPredicate(format: "name = %@", flickrAnnotation.album.name!)
+        fetchRequest.predicate = predicate
         albumFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         albumFetchedResultsController.delegate = self
         do {
@@ -113,7 +123,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
                         self.collectionView.reloadData()
                         self.updateUI(state: .preDownloading)
                         self.dataController.reloadAlbum(album: self.flickrAnnotation.album) { error in
-                            self.updateUI(state: .normal)
+                            self.showOKAlert(error: error)
                         }
                     }
                 }
@@ -253,26 +263,32 @@ extension AlbumViewController {
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
        
-        if !flicksToDeleteIndexPaths.isEmpty {
-            collectionView.performBatchUpdates {
-                self.collectionView.deleteItems(at: Array(flicksToDeleteIndexPaths))
+        if controller == flickFetchedResultsController {
+            if !flicksToDeleteIndexPaths.isEmpty {
+                collectionView.performBatchUpdates {
+                    self.collectionView.deleteItems(at: Array(flicksToDeleteIndexPaths))
+                }
+                setEditing(false, animated: false)
             }
-            setEditing(false, animated: false)
         }
         
-        if !flickrAnnotation.album.flickDownloadComplete {
-            print("not complete")
-            updateUI(state: .downloading)
-        } else {
-            print("complete")
+        if controller == albumFetchedResultsController {
+            if flickrAnnotation.album.flickDownloadComplete {
+                updateUI(state: .normal)
+            } else {
+                updateUI(state: .downloading)
+            }
         }
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
-        if type == .update {
-            if let indexPath = indexPath {
-                collectionView.reloadItems(at: [indexPath])
+        if controller == flickFetchedResultsController {
+            
+            if type == .update {
+                if let indexPath = indexPath {
+                    collectionView.reloadItems(at: [indexPath])
+                }
             }
         }
     }

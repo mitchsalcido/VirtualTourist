@@ -123,7 +123,7 @@ extension CoreDataController {
                         }
                     }
                     if let _ = try? context.save() {
-                        self.resumeFlickDownload(album: privateAlbum, completion: completion)
+                        self.resumeFlickDownload(album: privateAlbum)
                     }
                 }
             } else {
@@ -136,7 +136,7 @@ extension CoreDataController {
         }
     }
     
-    func resumeFlickDownload(album:Album, completion: @escaping (Error?) -> Void) {
+    func resumeFlickDownload(album:Album) {
         
         let ojectID = album.objectID
         self.container.performBackgroundTask { context in
@@ -160,13 +160,7 @@ extension CoreDataController {
                     count += 1
                     if count == flicks.count {
                         privateAlbum.flickDownloadComplete = true
-                        if let _ = try? context.save() {
-                            if privateAlbum.flickDownloadComplete {
-                                DispatchQueue.main.async {
-                                    completion(nil)
-                                }
-                            }
-                        }
+                        if let _ = try? context.save() {}
                     }
                 }
             }

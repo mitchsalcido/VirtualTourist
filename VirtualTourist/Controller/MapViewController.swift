@@ -45,8 +45,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             mapView.addAnnotation(annotation)
             
             if !album.flickDownloadComplete {
-                dataController.resumeFlickDownload(album: album) { error in
-                }
+                dataController.resumeFlickDownload(album: album)
             }
         }
     }
