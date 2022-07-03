@@ -55,6 +55,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             updateUI(state: .normal)
         } else {
             updateUI(state: .downloading)
+            progressView.isHidden = false
+            progressView.progress = 0.5
         }
     }
     
@@ -241,6 +243,7 @@ extension AlbumViewController {
             let flick = flickFetchedResultsController.object(at: indexPath)
             flicksToDelete.append(flick)
         }
+        
         dataController.deleteManagedObjects(objects: flicksToDelete) { error in
             if let error = error {
                 self.showOKAlert(error: error)
@@ -284,7 +287,6 @@ extension AlbumViewController {
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
         if controller == flickFetchedResultsController {
-            
             if type == .update {
                 if let indexPath = indexPath {
                     collectionView.reloadItems(at: [indexPath])
