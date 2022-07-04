@@ -113,8 +113,8 @@ extension MapViewController {
             annotation.title = album.name
             annotation.album = album
             mapView.addAnnotation(annotation)
-            
-            if !album.flickDownloadComplete {
+
+            if !album.flickDownloadComplete && !album.noFlicksFound {
                 dataController.resumeFlickDownload(album: album)
             }
         }

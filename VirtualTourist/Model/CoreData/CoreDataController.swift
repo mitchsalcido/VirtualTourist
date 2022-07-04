@@ -95,7 +95,7 @@ extension CoreDataController {
 extension CoreDataController {
     
     func reloadAlbum(album:Album, completion: @escaping (Error?) -> Void) {
-
+        
         let objectID = album.objectID
         container.performBackgroundTask { context in
             let album = context.object(with: objectID) as! Album
@@ -115,7 +115,8 @@ extension CoreDataController {
                     let privateAlbum = context.object(with: objectID) as! Album
                     
                     if FlickrAPI.foundFlicksArray.isEmpty {
-                        album.noFlicksFound = true
+                        privateAlbum.noFlicksFound = true
+                        privateAlbum.flickDownloadComplete = true
                     } else {
                         for dictionary in FlickrAPI.foundFlicksArray {
                             if let urlString = dictionary.keys.first, let title = dictionary.values.first {
@@ -129,7 +130,9 @@ extension CoreDataController {
                     }
                     
                     if let _ = try? context.save() {
-                        self.resumeFlickDownload(album: privateAlbum)
+                        if !privateAlbum.noFlicksFound {
+                            self.resumeFlickDownload(album: privateAlbum)
+                        }
                     }
                 }
             } else {

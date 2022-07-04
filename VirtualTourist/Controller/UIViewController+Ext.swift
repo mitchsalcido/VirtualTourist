@@ -11,7 +11,11 @@ extension UIViewController {
 
     func showOKAlert(error:Error? = nil) {
         let title = error?.localizedDescription ?? "Unknown Error"
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        showOKAlert(title: title)
+    }
+    
+    func showOKAlert(title: String, message: String? = nil) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let okAction = UIAlertAction(title: "OK", style: .default)
         alert.addAction(okAction)
         present(alert, animated: true)
