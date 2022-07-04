@@ -15,7 +15,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     var dataController:CoreDataController!
-    var albums:[Album] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +29,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         mapView.removeAnnotations(mapView.annotations)
         
+        var albums:[Album] = []
         let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
         do {
             albums = try dataController.viewContext.fetch(fetchRequest)

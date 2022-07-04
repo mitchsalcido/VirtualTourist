@@ -61,12 +61,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         } else if flickrAnnotation.album.flickDownloadComplete && (downloadedFlickCount > 0) {
             updateUI(state: .normal)
         } else {
-            updateUI(state: .noFlicksFound)
+            updateUI(state: .preDownloading)
             perform(#selector(noFlicksFound), with: nil, afterDelay: 1.0)
         }
     }
     
     @objc func noFlicksFound() {
+        updateUI(state: .noFlicksFound)
         let alert = UIAlertController(title: "No Flicks Found", message: "Unable to locate flicks in this geographic region.", preferredStyle: .alert)
         let okAction = UIAlertAction(title: "OK", style: .default)
         alert.addAction(okAction)

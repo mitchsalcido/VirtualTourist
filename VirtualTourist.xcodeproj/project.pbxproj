@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		30100E1A286F54AD00446620 /* UIViewController+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30100E19286F54AD00446620 /* UIViewController+Ext.swift */; };
+		301B0D192872649A00FD4FC3 /* VirtualTourist.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 301B0D182872649A00FD4FC3 /* VirtualTourist.rtf */; };
 		306274CA28724B1100BAECDF /* Album+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 306274C928724B1100BAECDF /* Album+Ext.swift */; };
 		3072FC46286E3766002E6132 /* FlickDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3072FC45286E3766002E6132 /* FlickDetailViewController.swift */; };
 		309745E428691BED00FF5C2E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309745E328691BED00FF5C2E /* AppDelegate.swift */; };
@@ -47,6 +48,7 @@
 
 /* Begin PBXFileReference section */
 		30100E19286F54AD00446620 /* UIViewController+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Ext.swift"; sourceTree = "<group>"; };
+		301B0D182872649A00FD4FC3 /* VirtualTourist.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = VirtualTourist.rtf; sourceTree = "<group>"; };
 		306274C928724B1100BAECDF /* Album+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Album+Ext.swift"; sourceTree = "<group>"; };
 		3072FC45286E3766002E6132 /* FlickDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickDetailViewController.swift; sourceTree = "<group>"; };
 		309745E028691BED00FF5C2E /* VirtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,6 +121,7 @@
 		309745E228691BED00FF5C2E /* VirtualTourist */ = {
 			isa = PBXGroup;
 			children = (
+				301B0D182872649A00FD4FC3 /* VirtualTourist.rtf */,
 				309745E328691BED00FF5C2E /* AppDelegate.swift */,
 				309745E528691BED00FF5C2E /* SceneDelegate.swift */,
 				3097461C2869223B00FF5C2E /* Networking */,
@@ -303,6 +306,7 @@
 			files = (
 				309745F028691BEE00FF5C2E /* LaunchScreen.storyboard in Resources */,
 				309745ED28691BEE00FF5C2E /* Assets.xcassets in Resources */,
+				301B0D192872649A00FD4FC3 /* VirtualTourist.rtf in Resources */,
 				309745EB28691BED00FF5C2E /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
