@@ -100,6 +100,7 @@ extension CoreDataController {
         container.performBackgroundTask { context in
             let album = context.object(with: objectID) as! Album
             album.flickDownloadComplete = false
+            album.noFlicksFound = false
             if let _ = try? context.save() {}
         }
         
@@ -113,15 +114,20 @@ extension CoreDataController {
                     context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
                     let privateAlbum = context.object(with: objectID) as! Album
                     
-                    for dictionary in FlickrAPI.foundFlicksArray {
-                        if let urlString = dictionary.keys.first, let title = dictionary.values.first {
-                            
-                            let flick = Flick(context: context)
-                            flick.urlString = urlString
-                            flick.title = title
-                            flick.album = privateAlbum
+                    if FlickrAPI.foundFlicksArray.isEmpty {
+                        album.noFlicksFound = true
+                    } else {
+                        for dictionary in FlickrAPI.foundFlicksArray {
+                            if let urlString = dictionary.keys.first, let title = dictionary.values.first {
+                                
+                                let flick = Flick(context: context)
+                                flick.urlString = urlString
+                                flick.title = title
+                                flick.album = privateAlbum
+                            }
                         }
                     }
+                    
                     if let _ = try? context.save() {
                         self.resumeFlickDownload(album: privateAlbum)
                     }

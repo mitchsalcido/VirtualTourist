@@ -76,7 +76,7 @@ extension MapViewController {
             dataController.deleteObject(object: annotation.album)
             mapView.removeAnnotation(annotation)
         } else {
-            performSegue(withIdentifier: "AlbumSegueID", sender: annotation)
+            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.album)
         }
     }
 }
@@ -87,7 +87,7 @@ extension MapViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "AlbumSegueID" {
             let controller = segue.destination as! AlbumViewController
-            controller.flickrAnnotation = sender as? FlickrAnnotation
+            controller.album = sender as? Album
         }
     }
 }

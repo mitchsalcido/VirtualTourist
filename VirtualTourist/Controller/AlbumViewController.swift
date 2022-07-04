@@ -18,8 +18,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
-    var flickrAnnotation:FlickrAnnotation!
-
+    var album:Album!
+    
     var flickFetchedResultsController:NSFetchedResultsController<Flick>!
     var albumFetchedResultsController:NSFetchedResultsController<Album>!
     var dataController:CoreDataController!
@@ -48,21 +48,19 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumInteritemSpacing = CellSpacing
         
         navigationItem.rightBarButtonItem = editButtonItem
-        title = flickrAnnotation.title
+        title = album.name
         
         configFlickFRC()
         configAlbumFRC()
-        downloadedFlickCount = flickrAnnotation.album.downloadedFlickImageCount()
+        downloadedFlickCount = album.downloadedFlickImageCount()
 
-        if !flickrAnnotation.album.flickDownloadComplete {
-            updateUI(state: .downloading)
-            progressView.isHidden = false
-            progressView.progress = 0.5
-        } else if flickrAnnotation.album.flickDownloadComplete && (downloadedFlickCount > 0) {
-            updateUI(state: .normal)
-        } else {
+        if album.noFlicksFound {
             updateUI(state: .preDownloading)
             perform(#selector(noFlicksFound), with: nil, afterDelay: 1.0)
+        } else if album.flickDownloadComplete {
+            updateUI(state: .normal)
+        } else if !album.flickDownloadComplete {
+            updateUI(state: .downloading)
         }
     }
     
@@ -98,7 +96,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
-        let predicate = NSPredicate(format: "album = %@", flickrAnnotation.album)
+        let predicate = NSPredicate(format: "album = %@", album)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
         flickFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
@@ -115,7 +113,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        let predicate = NSPredicate(format: "name = %@", flickrAnnotation.album.name!)
+        let predicate = NSPredicate(format: "name = %@", album.name!)
         fetchRequest.predicate = predicate
         albumFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         albumFetchedResultsController.delegate = self
@@ -132,13 +130,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            if let flicks = self.flickrAnnotation.album.flicks?.allObjects as? [Flick] {
+            if let flicks = self.album.flicks?.allObjects as? [Flick] {
                 self.dataController.deleteManagedObjects(objects: flicks) { error in
                                                   
                     if error == nil {
                         self.collectionView.reloadData()
                         self.updateUI(state: .preDownloading)
-                        self.dataController.reloadAlbum(album: self.flickrAnnotation.album) { error in
+                        self.dataController.reloadAlbum(album: self.album) { error in
                             self.showOKAlert(error: error)
                         }
                     }
@@ -301,11 +299,11 @@ extension AlbumViewController {
         }
         
         if controller == albumFetchedResultsController {
-            if flickrAnnotation.album.flickDownloadComplete {
+            if album.flickDownloadComplete {
                 updateUI(state: .normal)
                 progressView.progress = 0.0
             } else {
-                downloadedFlickCount = flickrAnnotation.album.downloadedFlickImageCount()
+                downloadedFlickCount = album.downloadedFlickImageCount()
             }
         }
     }
@@ -318,7 +316,7 @@ extension AlbumViewController {
                     collectionView.reloadItems(at: [indexPath])
                     
                     downloadedFlickCount += 1
-                    let total = flickrAnnotation.album.flicks?.count ?? 1
+                    let total = album.flicks?.count ?? 1
                     progressView.progress = Float(downloadedFlickCount) / Float(total)
                     
                     if (total > 1) && (downloadedFlickCount == 1) {
