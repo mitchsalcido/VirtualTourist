@@ -37,6 +37,7 @@ class CoreDataController {
     enum CoreDataError: LocalizedError {
         case badSave
         case badFetch
+        case badData
         
         var errorDescription: String? {
             switch self {
@@ -44,6 +45,8 @@ class CoreDataController {
                 return "Bad core data save."
             case .badFetch:
                 return "Bad data fetch."
+            case .badData:
+                return "Bad data received."
             }
         }
         var failureReason: String? {
@@ -52,6 +55,8 @@ class CoreDataController {
                 return "Unable to save data."
             case .badFetch:
                 return "Unable to retrieve data."
+            case .badData:
+                return "Bad data received in call."
             }
         }
         var helpAnchor: String? {
@@ -67,6 +72,19 @@ class CoreDataController {
 // MARK: Saving/Deleting Managed Objects
 extension CoreDataController {
 
+    // save context. Return true if good save
+    @discardableResult func saveContext(context:NSManagedObjectContext, completion: @escaping (LocalizedError?) -> Void) -> Bool {
+        do {
+            try context.save()
+            return true
+        } catch {
+            DispatchQueue.main.async {
+                completion(CoreDataError.badSave)
+            }
+            return false
+        }
+    }
+    
     func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (LocalizedError?) -> Void) {
         
         var objectIDs:[NSManagedObjectID] = []
@@ -81,16 +99,7 @@ extension CoreDataController {
                 let privateObject = context.object(with: objectID)
                 context.delete(privateObject)
             }
-            do {
-                try context.save()
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(CoreDataError.badSave)
-                }
-            }
+            self.saveContext(context: context, completion: completion)
         }
     }
 }
@@ -104,15 +113,10 @@ extension CoreDataController {
         container.performBackgroundTask { context in
             context.automaticallyMergesChangesFromParent = true
             context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            let album = context.object(with: objectID) as! Album
-            album.flickDownloadComplete = false
-            album.noFlicksFound = false
-            do {
-                try context.save()
-            } catch {
-                DispatchQueue.main.async {
-                    completion(CoreDataError.badSave)
-                }
+            let privateAlbum = context.object(with: objectID) as! Album
+            privateAlbum.flickDownloadComplete = false
+            privateAlbum.noFlicksFound = false
+            if !self.saveContext(context: context, completion: completion) {
                 return
             }
         }
@@ -141,16 +145,11 @@ extension CoreDataController {
                             }
                         }
                     }
-                    
-                    do {
-                        try context.save()
+                    if self.saveContext(context: context, completion: completion) {
                         if !privateAlbum.noFlicksFound {
-                            self.resumeFlickDownload(album: privateAlbum, completion:completion)
+                            self.resumeFlickDownload(album: privateAlbum, completion: completion)
                         }
-                    } catch {
-                        DispatchQueue.main.async {
-                            completion(CoreDataError.badSave)
-                        }
+                    } else {
                         return
                     }
                 }
@@ -180,30 +179,19 @@ extension CoreDataController {
                         do {
                             let data = try Data(contentsOf: url)
                             flick.imageData = data
-                            do {
-                                try context.save()
-                            } catch {
-                                DispatchQueue.main.async {
-                                    completion(CoreDataError.badSave)
-                                }
+                            if !self.saveContext(context: context, completion: completion) {
+                                return
                             }
                         } catch {
                             DispatchQueue.main.async {
-                                completion(CoreDataError.badSave)
+                                completion(CoreDataError.badData)
                             }
                             return
                         }
                     }
                 }
                 privateAlbum.flickDownloadComplete = true
-                do {
-                    try context.save()
-                } catch {
-                    DispatchQueue.main.async {
-                        completion(CoreDataError.badSave)
-                    }
-                    return
-                }
+                self.saveContext(context: context, completion: completion)
             }
         }
     }
