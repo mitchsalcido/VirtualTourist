@@ -36,17 +36,22 @@ class CoreDataController {
     
     enum CoreDataError: LocalizedError {
         case badSave
+        case badFetch
         
         var errorDescription: String? {
             switch self {
             case.badSave:
                 return "Bad core data save."
+            case .badFetch:
+                return "Bad data fetch."
             }
         }
         var failureReason: String? {
             switch self {
             case .badSave:
                 return "Unable to save data."
+            case .badFetch:
+                return "Unable to retrieve data."
             }
         }
         var helpAnchor: String? {
@@ -62,7 +67,7 @@ class CoreDataController {
 // MARK: Saving/Deleting Managed Objects
 extension CoreDataController {
 
-    func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (Error?) -> Void) {
+    func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (LocalizedError?) -> Void) {
         
         var objectIDs:[NSManagedObjectID] = []
         for object in objects {
@@ -93,7 +98,7 @@ extension CoreDataController {
 // MARK: Loading Album and Flicks
 extension CoreDataController {
     
-    func reloadAlbum(album:Album, completion: @escaping (Error?) -> Void) {
+    func reloadAlbum(album:Album, completion: @escaping (LocalizedError?) -> Void) {
         
         let objectID = album.objectID
         container.performBackgroundTask { context in
@@ -155,7 +160,7 @@ extension CoreDataController {
         }
     }
     
-    func resumeFlickDownload(album:Album, completion: @escaping (Error?) -> Void) {
+    func resumeFlickDownload(album:Album, completion: @escaping (LocalizedError?) -> Void) {
         
         let ojectID = album.objectID
         self.container.performBackgroundTask { context in
@@ -170,14 +175,33 @@ extension CoreDataController {
                     
                     if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
                         
-                        if let data = try? Data(contentsOf: url) {
+                        do {
+                            let data = try Data(contentsOf: url)
                             flick.imageData = data
-                            if let _ = try? context.save() {}
+                            do {
+                                try context.save()
+                            } catch {
+                                DispatchQueue.main.async {
+                                    completion(CoreDataError.badSave)
+                                }
+                            }
+                        } catch {
+                            DispatchQueue.main.async {
+                                completion(CoreDataError.badSave)
+                            }
+                            return
                         }
                     }
                 }
                 privateAlbum.flickDownloadComplete = true
-                if let _ = try? context.save() {}
+                do {
+                    try context.save()
+                } catch {
+                    DispatchQueue.main.async {
+                        completion(CoreDataError.badSave)
+                    }
+                    return
+                }
             }
         }
     }

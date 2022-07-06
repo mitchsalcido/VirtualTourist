@@ -9,7 +9,7 @@ import UIKit
 
 extension UIViewController {
 
-    func showOKAlert(error:Error? = nil) {
+    func showOKAlert(error:LocalizedError? = nil) {
         let title = error?.localizedDescription ?? "Unknown Error"
         showOKAlert(title: title)
     }

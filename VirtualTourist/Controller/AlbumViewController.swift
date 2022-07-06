@@ -318,7 +318,7 @@ extension AlbumViewController {
         do {
             try flickFetchedResultsController.performFetch()
         } catch {
-            showOKAlert(error: error)
+            showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }
     
@@ -334,7 +334,7 @@ extension AlbumViewController {
         do {
             try albumFetchedResultsController.performFetch()
         } catch {
-            showOKAlert(error: error)
+            showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }
     

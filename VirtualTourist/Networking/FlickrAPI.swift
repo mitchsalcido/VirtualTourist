@@ -57,6 +57,7 @@ class FlickrAPI {
     enum FlickrError: LocalizedError {
         case urlError
         case badFlickrDownload
+        case geoError
         
         var errorDescription: String? {
             switch self {
@@ -64,6 +65,8 @@ class FlickrAPI {
                 return "Bad URL"
             case .badFlickrDownload:
                 return "Bad Flickr download."
+            case .geoError:
+                return "Error with geography."
             }
         }
         var failureReason: String? {
@@ -72,6 +75,8 @@ class FlickrAPI {
                 return "Possbile bad text formatting."
             case .badFlickrDownload:
                 return "Bad data/response from Flickr."
+            case .geoError:
+                return "Possible invalid coordinates."
             }
         }
         var helpAnchor: String? {
@@ -85,7 +90,7 @@ class FlickrAPI {
 
 extension FlickrAPI {
     
-    class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, Error?) -> Void) {
+    class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, LocalizedError?) -> Void) {
         
         guard let url = Endpoints.searchGeo(lat: latitude, lon: longitude).url else {
             completion(false, FlickrError.urlError)
@@ -93,7 +98,7 @@ extension FlickrAPI {
         }
         taskGET(url: url, responseType: FlickrSearchResponse.self) { response, error in
             guard let response = response else {
-                completion(false, error)
+                completion(false, FlickrError.urlError)
                 return
             }
             foundFlicksArray = createRandomURLStringArray(response: response)
@@ -101,11 +106,11 @@ extension FlickrAPI {
         }
     }
 
-    class func getFlickData(url: URL, completion: @escaping (Data?, Error?) -> Void) {
+    class func getFlickData(url: URL, completion: @escaping (Data?, LocalizedError?) -> Void) {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
-                completion(nil, error)
+                completion(nil, FlickrError.urlError)
                 return
             }
             completion(data, nil)
@@ -113,14 +118,14 @@ extension FlickrAPI {
         task.resume()
     }
     
-    class func reverseGeoCode(location: CLLocation, completion: @escaping (String?, Error?) -> Void) {
+    class func reverseGeoCode(location: CLLocation, completion: @escaping (String?, LocalizedError?) -> Void) {
         
         let geoCoder = CLGeocoder()
         geoCoder.reverseGeocodeLocation(location) { placemarks, error in
             
             guard let placeMark = placemarks?.first else {
                 DispatchQueue.main.async {
-                    completion(nil, error)
+                    completion(nil, FlickrError.geoError)
                 }
                 return
             }
@@ -144,12 +149,12 @@ extension FlickrAPI {
 
 extension FlickrAPI {
     
-    class func taskGET<ResponseType: Decodable>(url: URL, responseType:ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) {
+    class func taskGET<ResponseType: Decodable>(url: URL, responseType:ResponseType.Type, completion: @escaping (ResponseType?, LocalizedError?) -> Void) {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
                 DispatchQueue.main.async {
-                    completion(nil, error)
+                    completion(nil, FlickrError.badFlickrDownload)
                 }
                 return
             }
@@ -160,7 +165,7 @@ extension FlickrAPI {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    completion(nil, error)
+                    completion(nil, FlickrError.badFlickrDownload)
                 }
                 return
             }

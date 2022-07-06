@@ -74,8 +74,10 @@ extension MapViewController {
         
         if control == view.leftCalloutAccessoryView {
             dataController.deleteManagedObjects(objects: [annotation.album]) { error in
+                if let error = error {
+                    self.showOKAlert(error: error)
+                }
             }
-            //dataController.deleteObject(object: annotation.album)
             mapView.removeAnnotation(annotation)
         } else {
             performSegue(withIdentifier: "AlbumSegueID", sender: annotation.album)
@@ -106,7 +108,7 @@ extension MapViewController {
         do {
             albums = try dataController.viewContext.fetch(fetchRequest)
         } catch {
-            showOKAlert(error: error)
+            showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
         
         for album in albums {
