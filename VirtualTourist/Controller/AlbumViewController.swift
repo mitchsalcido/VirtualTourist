@@ -48,6 +48,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         flowLayout.minimumInteritemSpacing = CellSpacing
         
         navigationItem.rightBarButtonItem = editButtonItem
+        editButtonItem.isEnabled = false
+        reloadBbi.isEnabled = false
         title = album.name
         
         configFlickFRC()
