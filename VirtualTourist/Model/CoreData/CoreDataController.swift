@@ -85,6 +85,9 @@ extension CoreDataController {
     @discardableResult func saveContext(context:NSManagedObjectContext, completion: @escaping (LocalizedError?) -> Void) -> Bool {
         do {
             try context.save()
+            DispatchQueue.main.async {
+                completion(nil)
+            }
             return true
         } catch {
             DispatchQueue.main.async {
@@ -109,25 +112,6 @@ extension CoreDataController {
             self.saveContext(context: context, completion: completion)
         }
     }
-    /*
-    func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (LocalizedError?) -> Void) {
-        
-        var objectIDs:[NSManagedObjectID] = []
-        for object in objects {
-            objectIDs.append(object.objectID)
-        }
-        container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            
-            for objectID in objectIDs {
-                let privateObject = context.object(with: objectID)
-                context.delete(privateObject)
-            }
-            self.saveContext(context: context, completion: completion)
-        }
-    }
-     */
 }
 
 // MARK: Loading Album and Flicks
@@ -136,9 +120,7 @@ extension CoreDataController {
     func reloadAlbum(album:Album, completion: @escaping (LocalizedError?) -> Void) {
         
         let objectID = album.objectID
-        container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+        performBackgroundOp { context in
             let privateAlbum = context.object(with: objectID) as! Album
             privateAlbum.flickDownloadComplete = false
             privateAlbum.noFlicksFound = false
@@ -146,15 +128,12 @@ extension CoreDataController {
                 return
             }
         }
-        
+
         // new search
         FlickrAPI.geoSearchFlickr(latitude: album.latitude, longitude: album.longitude) { success, error in
 
             if success {
-                let objectID = album.objectID
-                self.container.performBackgroundTask { context in
-                    context.automaticallyMergesChangesFromParent = true
-                    context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+                self.performBackgroundOp { context in
                     let privateAlbum = context.object(with: objectID) as! Album
                     
                     if FlickrAPI.foundFlicksArray.isEmpty {
@@ -190,9 +169,7 @@ extension CoreDataController {
     func resumeFlickDownload(album:Album, completion: @escaping (LocalizedError?) -> Void) {
         
         let ojectID = album.objectID
-        self.container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+        self.performBackgroundOp { context in
             let privateAlbum = context.object(with: ojectID) as! Album
             
             if var flicks = privateAlbum.flicks?.allObjects as? [Flick] {
