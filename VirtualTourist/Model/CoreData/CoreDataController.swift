@@ -72,6 +72,15 @@ class CoreDataController {
 // MARK: Saving/Deleting Managed Objects
 extension CoreDataController {
 
+    func performBackgroundOp(completion: @escaping (NSManagedObjectContext) -> Void) {
+        container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            
+            completion(context)
+        }
+    }
+    
     // save context. Return true if good save
     @discardableResult func saveContext(context:NSManagedObjectContext, completion: @escaping (LocalizedError?) -> Void) -> Bool {
         do {
@@ -91,6 +100,22 @@ extension CoreDataController {
         for object in objects {
             objectIDs.append(object.objectID)
         }
+        self.performBackgroundOp { context in
+            
+            for objectID in objectIDs {
+                let privateObject = context.object(with: objectID)
+                context.delete(privateObject)
+            }
+            self.saveContext(context: context, completion: completion)
+        }
+    }
+    /*
+    func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (LocalizedError?) -> Void) {
+        
+        var objectIDs:[NSManagedObjectID] = []
+        for object in objects {
+            objectIDs.append(object.objectID)
+        }
         container.performBackgroundTask { context in
             context.automaticallyMergesChangesFromParent = true
             context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
@@ -102,6 +127,7 @@ extension CoreDataController {
             self.saveContext(context: context, completion: completion)
         }
     }
+     */
 }
 
 // MARK: Loading Album and Flicks

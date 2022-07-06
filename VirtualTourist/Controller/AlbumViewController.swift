@@ -184,13 +184,15 @@ extension AlbumViewController {
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
 
+        print("reloadBbiPressed")
         let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
+            print("begining of action")
             if let flicks = self.album.flicks?.allObjects as? [Flick] {
                 self.dataController.deleteManagedObjects(objects: flicks) { error in
-                                                  
+                             print("deleteManaged reload action")
                     if error == nil {
                         self.collectionView.reloadData()
                         self.updateUI(state: .preDownloading)
@@ -199,6 +201,8 @@ extension AlbumViewController {
                         }
                     }
                 }
+            } else {
+                print("nil flicks reload")
             }
         }
         alert.addAction(proceedAction)
