@@ -37,6 +37,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         case downloading
         case normal
         case noFlicksFound
+        case emptyAlbum
     }
     
     override func viewDidLoad() {
@@ -74,7 +75,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
             updateUI(state: .noFlicksFound)
             perform(#selector(handleNoFlicksFound), with: nil, afterDelay: 1.0)
         } else if !album.noFlicksFound && album.flickDownloadComplete && zeroCount {
-            updateUI(state: .normal)
+            updateUI(state: .emptyAlbum)
             perform(#selector(handleEmptyAlbum), with: nil, afterDelay: 1.0)
         } else if !album.noFlicksFound && album.flickDownloadComplete && !zeroCount {
             updateUI(state: .normal)
@@ -240,7 +241,11 @@ extension AlbumViewController {
         
         if controller == albumFetchedResultsController {
             if album.flickDownloadComplete {
-                updateUI(state: .normal)
+                if let empty = flickFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
+                    updateUI(state: .emptyAlbum)
+                } else {
+                    updateUI(state: .normal)
+                }
                 progressView.progress = 0.0
             } else {
                 downloadedFlickCount = album.downloadedFlickImageCount()
@@ -307,6 +312,13 @@ extension AlbumViewController {
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
             reloadBbi.isEnabled = false
+            activityIndicator.stopAnimating()
+            progressView.isHidden = true
+        case .emptyAlbum:
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.leftBarButtonItem = nil
+            editButtonItem.isEnabled = false
+            reloadBbi.isEnabled = true
             activityIndicator.stopAnimating()
             progressView.isHidden = true
         }
