@@ -73,7 +73,9 @@ extension MapViewController {
         }
         
         if control == view.leftCalloutAccessoryView {
-            dataController.deleteObject(object: annotation.album)
+            dataController.deleteManagedObjects(objects: [annotation.album]) { error in
+            }
+            //dataController.deleteObject(object: annotation.album)
             mapView.removeAnnotation(annotation)
         } else {
             performSegue(withIdentifier: "AlbumSegueID", sender: annotation.album)
@@ -115,7 +117,11 @@ extension MapViewController {
             mapView.addAnnotation(annotation)
 
             if !album.flickDownloadComplete && !album.noFlicksFound {
-                dataController.resumeFlickDownload(album: album)
+                dataController.resumeFlickDownload(album: album) { error in
+                    if let error = error {
+                        self.showOKAlert(error: error)
+                    }
+                }
             }
         }
     }

@@ -56,6 +56,30 @@ class FlickrAPI {
     
     enum FlickrError: LocalizedError {
         case urlError
+        case badFlickrDownload
+        
+        var errorDescription: String? {
+            switch self {
+            case .urlError:
+                return "Bad URL"
+            case .badFlickrDownload:
+                return "Bad Flickr download."
+            }
+        }
+        var failureReason: String? {
+            switch self {
+            case .urlError:
+                return "Possbile bad text formatting."
+            case .badFlickrDownload:
+                return "Bad data/response from Flickr."
+            }
+        }
+        var helpAnchor: String? {
+            return "Contact developer for prompt and courteous service."
+        }
+        var recoverySuggestion: String? {
+            return "Close App and re-open."
+        }
     }
 }
 
@@ -76,23 +100,7 @@ extension FlickrAPI {
             completion(true, nil)
         }
     }
-    
-    class func getFlick(url: URL, completion: @escaping (UIImage?, Error?) -> Void) {
-        
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(nil, error)
-                }
-                return
-            }
-            DispatchQueue.main.async {
-                completion(UIImage(data: data), nil)
-            }
-        }
-        task.resume()
-    }
-    
+
     class func getFlickData(url: URL, completion: @escaping (Data?, Error?) -> Void) {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in

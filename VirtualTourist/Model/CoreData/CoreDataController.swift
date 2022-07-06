@@ -33,36 +33,35 @@ class CoreDataController {
         viewContext.automaticallyMergesChangesFromParent = true
         viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
     }
+    
+    enum CoreDataError: LocalizedError {
+        case badSave
+        
+        var errorDescription: String? {
+            switch self {
+            case.badSave:
+                return "Bad core data save."
+            }
+        }
+        var failureReason: String? {
+            switch self {
+            case .badSave:
+                return "Unable to save data."
+            }
+        }
+        var helpAnchor: String? {
+            return "Contact developer for prompt and courteous service."
+        }
+        var recoverySuggestion: String? {
+            return "Close app and re-open."
+        }
+    }
 }
 
 
-// MARK: Adding/Deleting Managed Objects
+// MARK: Saving/Deleting Managed Objects
 extension CoreDataController {
-    
-    func newManagedObject<ObjectType:NSManagedObject>(objectType:ObjectType.Type, completion: @escaping (ObjectType) -> Void) {
-        
-        container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            
-            let newObject = ObjectType(context: context)
-            completion(newObject)
-            if let _ = try? context.save() {}
-        }
-    }
 
-    func deleteObject(object: NSManagedObject) {
-        let objectID = object.objectID
-        container.performBackgroundTask { context in
-            context.automaticallyMergesChangesFromParent = true
-            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            
-            let object = context.object(with: objectID)
-            context.delete(object)
-            if let _ = try? context.save() {}
-        }
-    }
-    
     func deleteManagedObjects(objects:[NSManagedObject], completion: @escaping (Error?) -> Void) {
         
         var objectIDs:[NSManagedObjectID] = []
@@ -84,7 +83,7 @@ extension CoreDataController {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    completion(error)
+                    completion(CoreDataError.badSave)
                 }
             }
         }
@@ -101,7 +100,14 @@ extension CoreDataController {
             let album = context.object(with: objectID) as! Album
             album.flickDownloadComplete = false
             album.noFlicksFound = false
-            if let _ = try? context.save() {}
+            do {
+                try context.save()
+            } catch {
+                DispatchQueue.main.async {
+                    completion(CoreDataError.badSave)
+                }
+                return
+            }
         }
         
         // new search
@@ -129,23 +135,27 @@ extension CoreDataController {
                         }
                     }
                     
-                    if let _ = try? context.save() {
+                    do {
+                        try context.save()
                         if !privateAlbum.noFlicksFound {
-                            self.resumeFlickDownload(album: privateAlbum)
+                            self.resumeFlickDownload(album: privateAlbum, completion:completion)
                         }
+                    } catch {
+                        DispatchQueue.main.async {
+                            completion(CoreDataError.badSave)
+                        }
+                        return
                     }
                 }
             } else {
-                if let error = error {
-                    DispatchQueue.main.async {
-                        completion(error)
-                    }
+                DispatchQueue.main.async {
+                    completion(FlickrAPI.FlickrError.badFlickrDownload)
                 }
             }
         }
     }
     
-    func resumeFlickDownload(album:Album) {
+    func resumeFlickDownload(album:Album, completion: @escaping (Error?) -> Void) {
         
         let ojectID = album.objectID
         self.container.performBackgroundTask { context in
@@ -159,6 +169,7 @@ extension CoreDataController {
                 for flick in flicks {
                     
                     if let urlString = flick.urlString, let url = URL(string: urlString), flick.imageData == nil {
+                        
                         if let data = try? Data(contentsOf: url) {
                             flick.imageData = data
                             if let _ = try? context.save() {}
