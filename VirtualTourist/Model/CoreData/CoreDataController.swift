@@ -102,6 +102,8 @@ extension CoreDataController {
         
         let objectID = album.objectID
         container.performBackgroundTask { context in
+            context.automaticallyMergesChangesFromParent = true
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
             let album = context.object(with: objectID) as! Album
             album.flickDownloadComplete = false
             album.noFlicksFound = false
