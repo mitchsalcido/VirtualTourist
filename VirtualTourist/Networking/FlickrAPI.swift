@@ -15,7 +15,7 @@ import CoreLocation
 
 class FlickrAPI {
     
-    static let MAX_FLICKS = 3
+    static let MAX_FLICKS = 10
     static var foundFlicksArray:[[String:String]] = []
 
     struct UserInfo {

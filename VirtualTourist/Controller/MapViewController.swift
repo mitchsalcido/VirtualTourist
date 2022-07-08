@@ -22,6 +22,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         dataController = appDelegate.dataController
         
+        let button = UIButton(type: .infoLight)
+        button.addTarget(self, action: #selector(appInfoButtonPressed(_:)), for: .touchUpInside)
+        let bbi = UIBarButtonItem(customView: button)
+        navigationItem.rightBarButtonItem = bbi
+        
         loadAnnotations()
     }
     
@@ -146,7 +151,11 @@ extension MapViewController {
             album.latitude = coordinate.latitude
             album.name = annotation.title
             annotation.album = album
-            if let _ = try? self.dataController.viewContext.save() {}
+            self.dataController.saveContext(context: self.dataController.viewContext) { error in
+                if let error = error {
+                    self.showOKAlert(error: error)
+                }
+            }
             
             self.dataController.reloadAlbum(album: album) { error in
                 if let error = error {
@@ -154,5 +163,9 @@ extension MapViewController {
                 }
             }
         }
+    }
+    
+    @objc func appInfoButtonPressed(_ sender: Any) {
+        performSegue(withIdentifier: "AppInfoSegueID", sender: nil)
     }
 }

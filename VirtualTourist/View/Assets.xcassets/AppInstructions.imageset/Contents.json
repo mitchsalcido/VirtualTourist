@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "AlbumAccessoryView3.png",
+      "filename" : "AppInstructions.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "AlbumAccessoryView3@2x.png",
+      "filename" : "AppInstructions@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "AlbumAccessoryView3@3x.png",
+      "filename" : "AppInstructions@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

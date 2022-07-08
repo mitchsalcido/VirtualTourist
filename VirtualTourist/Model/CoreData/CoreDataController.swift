@@ -11,7 +11,6 @@ import CoreData
 class CoreDataController {
     
     let container:NSPersistentContainer
-    
     var viewContext:NSManagedObjectContext {
         return container.viewContext
     }
@@ -69,14 +68,13 @@ class CoreDataController {
 }
 
 
-// MARK: Saving/Deleting Managed Objects
+// MARK: Background Op, Saving/Deleting Managed Objects
 extension CoreDataController {
 
     func performBackgroundOp(completion: @escaping (NSManagedObjectContext) -> Void) {
         container.performBackgroundTask { context in
             context.automaticallyMergesChangesFromParent = true
             context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-            
             completion(context)
         }
     }
