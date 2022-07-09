@@ -4,9 +4,14 @@
 //
 //  Created by Mitchell Salcido on 6/26/22.
 //
+/*
+ About FlickrSearchResponse:
+ Data model for Flickr responses. Geosearch data resturned from Flickr is decoded into stucts below
+*/
 
 import Foundation
 
+// top level flick response
 struct FlickrSearchResponse: Codable {
     let stat: String
     let photos: PhotosResponse
@@ -17,6 +22,7 @@ struct FlickrSearchResponse: Codable {
     }
 }
 
+// returned flicks
 struct PhotosResponse: Codable {
     let page: Int
     let pages: Int
@@ -33,6 +39,7 @@ struct PhotosResponse: Codable {
     }
 }
 
+// a single flick
 struct PhotoResponse: Codable {
     let id: String
     let owner: String
