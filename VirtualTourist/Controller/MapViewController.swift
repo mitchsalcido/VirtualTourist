@@ -78,14 +78,14 @@ extension MapViewController {
         }
         
         if control == view.leftCalloutAccessoryView {
-            dataController.deleteManagedObjects(objects: [annotation.album]) { error in
+            dataController.deleteManagedObjects(objects: [annotation.pin]) { error in
                 if let error = error {
                     self.showOKAlert(error: error)
                 }
             }
             mapView.removeAnnotation(annotation)
         } else {
-            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.album)
+            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.pin)
         }
     }
 }
@@ -96,7 +96,7 @@ extension MapViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "AlbumSegueID" {
             let controller = segue.destination as! AlbumViewController
-            controller.album = sender as? Album
+            controller.pin = sender as? Pin
         }
     }
 }
@@ -108,23 +108,23 @@ extension MapViewController {
         
         mapView.removeAnnotations(mapView.annotations)
         
-        var albums:[Album] = []
-        let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
+        var pins:[Pin] = []
+        let fetchRequest:NSFetchRequest<Pin> = NSFetchRequest(entityName: "Pin")
         do {
-            albums = try dataController.viewContext.fetch(fetchRequest)
+            pins = try dataController.viewContext.fetch(fetchRequest)
         } catch {
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
         
-        for album in albums {
-            let coordinate = CLLocationCoordinate2D(latitude: album.latitude, longitude: album.longitude)
+        for pin in pins {
+            let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
             let annotation = FlickrAnnotation(coordinate: coordinate)
-            annotation.title = album.name
-            annotation.album = album
+            annotation.title = pin.name
+            annotation.pin = pin
             mapView.addAnnotation(annotation)
 
-            if !album.flickDownloadComplete && !album.noFlicksFound {
-                dataController.resumeFlickDownload(album: album) { error in
+            if !pin.photoDownloadComplete && !pin.noPhotosFound {
+                dataController.resumePhotoDownload(pin: pin) { error in
                     if let error = error {
                         self.showOKAlert(error: error)
                     }
@@ -146,18 +146,18 @@ extension MapViewController {
             }
             self.mapView.addAnnotation(annotation)
             
-            let album = Album(context: self.dataController.viewContext)
-            album.longitude = coordinate.longitude
-            album.latitude = coordinate.latitude
-            album.name = annotation.title
-            annotation.album = album
+            let pin = Pin(context: self.dataController.viewContext)
+            pin.longitude = coordinate.longitude
+            pin.latitude = coordinate.latitude
+            pin.name = annotation.title
+            annotation.pin = pin
             self.dataController.saveContext(context: self.dataController.viewContext) { error in
                 if let error = error {
                     self.showOKAlert(error: error)
                 }
             }
             
-            self.dataController.reloadAlbum(album: album) { error in
+            self.dataController.reloadPin(pin: pin) { error in
                 if let error = error {
                     self.showOKAlert(error: error)
                 }

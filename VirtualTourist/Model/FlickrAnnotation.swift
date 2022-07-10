@@ -12,7 +12,8 @@ import CoreData
 class FlickrAnnotation: NSObject, MKAnnotation {
     
     var album:Album!
-    
+    var pin:Pin!
+
     var coordinate: CLLocationCoordinate2D
     var title: String?
     var subtitle: String?

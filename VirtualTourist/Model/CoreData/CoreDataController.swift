@@ -303,23 +303,23 @@ extension CoreDataController {
         }
     }
     
-    // Download Flicks in an album
+    // Download photos in Pin
     func resumePhotoDownload(pin:Pin, completion: @escaping (LocalizedError?) -> Void) {
         /*
-         Download (or resume downloading) all Flicks in an album that have nil imageData.
+         Download (or resume downloading) all photos in a Pin that have nil imageData.
          */
         let ojectID = pin.objectID
         self.performBackgroundOp { context in
             let privatePin = context.object(with: ojectID) as! Pin
             
-            // retrieve Flicks and sort by urlString. This is the same order sorted in Album Collection view. Forces Flicks to download in same order as presented.
+            // retrieve photos and sort by urlString. This is the same order sorted in Pin Collection view. Forces photos to download in same order as presented.
             if var photos = privatePin.photos?.allObjects as? [Photo] {
                 photos = photos.sorted(by: {$0.urlString! > $1.urlString!})
                 
                 for photo in photos {
                     // verify good URL and nil imageData (need new imageData)
                     if let urlString = photo.urlString, let url = URL(string: urlString), photo.imageData == nil {
-                        // good URL and nil imageData for Flick...retireve imageData
+                        // good URL and nil imageData for Photo...retireve imageData
                         do {
                             let data = try Data(contentsOf: url)
                             photo.imageData = data

@@ -19,6 +19,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
     var album:Album!
+    var pin:Pin!
     
     var flickFetchedResultsController:NSFetchedResultsController<Flick>!
     var albumFetchedResultsController:NSFetchedResultsController<Album>!
