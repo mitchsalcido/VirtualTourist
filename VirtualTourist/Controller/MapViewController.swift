@@ -73,7 +73,7 @@ extension MapViewController {
     
     func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
         
-        guard let annotation = view.annotation as? FlickrAnnotation else {
+        guard let annotation = view.annotation as? PinAnnotation else {
             return
         }
         
@@ -95,7 +95,7 @@ extension MapViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "AlbumSegueID" {
-            let controller = segue.destination as! AlbumViewController
+            let controller = segue.destination as! PinViewController
             controller.pin = sender as? Pin
         }
     }
@@ -118,7 +118,7 @@ extension MapViewController {
         
         for pin in pins {
             let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
-            let annotation = FlickrAnnotation(coordinate: coordinate)
+            let annotation = PinAnnotation(coordinate: coordinate)
             annotation.title = pin.name
             annotation.pin = pin
             mapView.addAnnotation(annotation)
@@ -134,7 +134,7 @@ extension MapViewController {
     }
     
     fileprivate func newAnnotation(_ coordinate: CLLocationCoordinate2D) {
-        let annotation = FlickrAnnotation(coordinate: coordinate)
+        let annotation = PinAnnotation(coordinate: coordinate)
         
         let location = CLLocation(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude)
         FlickrAPI.reverseGeoCode(location: location) { name, error in

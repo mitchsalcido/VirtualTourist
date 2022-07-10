@@ -1,5 +1,5 @@
 //
-//  AlbumCollectionViewController.swift
+//  PinViewController.swift
 //  VirtualTourist
 //
 //  Created by Mitchell Salcido on 6/26/22.
@@ -11,14 +11,13 @@ import CoreData
 
 private let reuseIdentifier = "AlbumCellID"
 
-class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, NSFetchedResultsControllerDelegate {
+class PinViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, NSFetchedResultsControllerDelegate {
             
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
-    //var album:Album!
     var pin:Pin!
     
     var photoFetchedResultsController:NSFetchedResultsController<Photo>!
@@ -60,18 +59,6 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         downloadedPhotoCount = pin.downloadedPhotoImageCount()
         let zeroCount = (downloadedPhotoCount == 0)
         
-        /*
-         Album state logic for initial UIState
-         noFlicksFound  downloadComplete    zeroCount       UIState         Alert
-         false              false                true        .downloading    x
-         false              true                 true        .normal         handleEmptyAlbum
-         true               x                    x           .noFlicksFound  handleNoFlicksFound
-         true               x                    x           .noFlicksFound  handleNoFlicksFound
-         false              false                false       .downloading    x
-         false              true                 false       .normal         x
-         true               x                    x           .noFlicksFound  handleNoFlicksFound
-         true               x                    x           .noFlicksFound  handleNoFlicksFound
-         */
         if pin.noPhotosFound {
             updateUI(state: .noPhotosFound)
             perform(#selector(handleNoPhotosFound), with: nil, afterDelay: 1.0)
@@ -105,14 +92,14 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 }
 
 // MARK: UICollectionViewDataSource
-extension AlbumViewController {
+extension PinViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return photoFetchedResultsController.sections?[section].numberOfObjects ?? 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! PhotoCollectionViewCell
     
         let photo = photoFetchedResultsController.object(at: indexPath)
         
@@ -133,7 +120,7 @@ extension AlbumViewController {
 }
 
 // MARK: UICollectionViewDelegate
-extension AlbumViewController {
+extension PinViewController {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
@@ -159,7 +146,7 @@ extension AlbumViewController {
 }
 
 // MARK: UICollectionViewDelegateFlowLayout
-extension AlbumViewController {
+extension PinViewController {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
@@ -169,7 +156,7 @@ extension AlbumViewController {
 }
 
 // MARK: BarButtonItem Target/Actions
-extension AlbumViewController {
+extension PinViewController {
     
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
         
@@ -216,18 +203,18 @@ extension AlbumViewController {
 }
 
 // MARK: Segue
-extension AlbumViewController {
+extension PinViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "FlickDetailSegueID" {
-            let controller = segue.destination as! FlickDetailViewController
+            let controller = segue.destination as! PhotoDetailViewController
             controller.photo = sender as? Photo
         }
     }
 }
 
 // MARK: FetchedResultsController Delegate
-extension AlbumViewController {
+extension PinViewController {
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
        
@@ -275,7 +262,7 @@ extension AlbumViewController {
 }
 
 // MARK: Helpers
-extension AlbumViewController {
+extension PinViewController {
     
     func updateUI(state: UIState) {
         

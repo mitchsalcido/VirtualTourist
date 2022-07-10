@@ -1,5 +1,5 @@
 //
-//  FlickrAnnotation.swift
+//  PinAnnotation.swift
 //  VirtualTourist
 //
 //  Created by Mitchell Salcido on 6/27/22.
@@ -9,9 +9,8 @@ import Foundation
 import MapKit
 import CoreData
 
-class FlickrAnnotation: NSObject, MKAnnotation {
+class PinAnnotation: NSObject, MKAnnotation {
     
-    var album:Album!
     var pin:Pin!
 
     var coordinate: CLLocationCoordinate2D

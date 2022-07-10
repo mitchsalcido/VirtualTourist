@@ -1,5 +1,5 @@
 //
-//  FlickDetailViewController.swift
+//  PhotoDetailViewController.swift
 //  VirtualTourist
 //
 //  Created by Mitchell Salcido on 6/30/22.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class FlickDetailViewController: UIViewController {
+class PhotoDetailViewController: UIViewController {
 
     var photo:Photo!
     
