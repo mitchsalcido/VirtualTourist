@@ -122,7 +122,7 @@ extension FlickrAPI {
                 completion(nil, FlickrError.urlError)
                 return
             }
-            // good response
+            // good response. Invoke competion using randomized respsonse, sorted by URLString
             completion(createRandomURLStringArray(response: response), nil)
         }
     }
@@ -145,6 +145,7 @@ extension FlickrAPI {
                 return
             }
             
+            // default name
             var name = "Unknown"
             if let local = placeMark.locality {
                 name = local

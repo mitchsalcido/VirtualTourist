@@ -4,7 +4,10 @@
 //
 //  Created by Mitchell Salcido on 7/10/22.
 //
-
+/*
+ About Pin+Ext:
+ Extension of Pin entity
+ */
 import Foundation
 import CoreData
 
