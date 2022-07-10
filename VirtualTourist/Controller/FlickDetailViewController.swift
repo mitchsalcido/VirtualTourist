@@ -9,13 +9,13 @@ import UIKit
 
 class FlickDetailViewController: UIViewController {
 
-    var flick:Flick!
+    var photo:Photo!
     
     @IBOutlet weak var imageView: UIImageView!
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let imageData = flick.imageData, let title = flick.title {
+        if let imageData = photo.imageData, let title = photo.title {
             imageView.image = UIImage(data: imageData)
             self.title = title
         }

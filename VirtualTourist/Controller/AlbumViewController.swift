@@ -18,16 +18,16 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var reloadBbi: UIBarButtonItem!
-    var album:Album!
+    //var album:Album!
     var pin:Pin!
     
-    var flickFetchedResultsController:NSFetchedResultsController<Flick>!
-    var albumFetchedResultsController:NSFetchedResultsController<Album>!
+    var photoFetchedResultsController:NSFetchedResultsController<Photo>!
+    var pinFetchedResultsController:NSFetchedResultsController<Pin>!
     var dataController:CoreDataController!
     
-    var flicksToDeleteIndexPaths:Set<IndexPath> = []
+    var photosToDeleteIndexPaths:Set<IndexPath> = []
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
-    var downloadedFlickCount:Int = 0
+    var downloadedPhotoCount:Int = 0
     
     let CellsPerRow:CGFloat = 5.0
     let CellSpacing:CGFloat = 5.0
@@ -37,8 +37,8 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         case preDownloading
         case downloading
         case normal
-        case noFlicksFound
-        case emptyAlbum
+        case noPhotosFound
+        case emptyPin
     }
     
     override func viewDidLoad() {
@@ -52,13 +52,13 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
         navigationItem.rightBarButtonItem = editButtonItem
         editButtonItem.isEnabled = false
         reloadBbi.isEnabled = false
-        title = album.name
+        title = pin.name
         
-        configFlickFRC()
-        configAlbumFRC()
+        configPhotoFRC()
+        configPinFRC()
         
-        downloadedFlickCount = album.downloadedFlickImageCount()
-        let zeroCount = (downloadedFlickCount == 0)
+        downloadedPhotoCount = pin.downloadedPhotoImageCount()
+        let zeroCount = (downloadedPhotoCount == 0)
         
         /*
          Album state logic for initial UIState
@@ -72,15 +72,15 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
          true               x                    x           .noFlicksFound  handleNoFlicksFound
          true               x                    x           .noFlicksFound  handleNoFlicksFound
          */
-        if album.noFlicksFound {
-            updateUI(state: .noFlicksFound)
-            perform(#selector(handleNoFlicksFound), with: nil, afterDelay: 1.0)
-        } else if !album.noFlicksFound && album.flickDownloadComplete && zeroCount {
-            updateUI(state: .emptyAlbum)
-            perform(#selector(handleEmptyAlbum), with: nil, afterDelay: 1.0)
-        } else if !album.noFlicksFound && album.flickDownloadComplete && !zeroCount {
+        if pin.noPhotosFound {
+            updateUI(state: .noPhotosFound)
+            perform(#selector(handleNoPhotosFound), with: nil, afterDelay: 1.0)
+        } else if !pin.noPhotosFound && pin.photoDownloadComplete && zeroCount {
+            updateUI(state: .emptyPin)
+            perform(#selector(handleEmptyPin), with: nil, afterDelay: 1.0)
+        } else if !pin.noPhotosFound && pin.photoDownloadComplete && !zeroCount {
             updateUI(state: .normal)
-        } else if !album.noFlicksFound && !album.flickDownloadComplete {
+        } else if !pin.noPhotosFound && !pin.photoDownloadComplete {
             updateUI(state: .downloading)
         }
     }
@@ -92,7 +92,7 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
-        flicksToDeleteIndexPaths.removeAll()
+        photosToDeleteIndexPaths.removeAll()
         
         if editing {
             updateUI(state: .editing)
@@ -108,16 +108,16 @@ class AlbumViewController: UIViewController, UICollectionViewDelegate, UICollect
 extension AlbumViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return flickFetchedResultsController.sections?[section].numberOfObjects ?? 0
+        return photoFetchedResultsController.sections?[section].numberOfObjects ?? 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCollectionViewCell
     
-        let flick = flickFetchedResultsController.object(at: indexPath)
+        let photo = photoFetchedResultsController.object(at: indexPath)
         
         
-        if let imageData = flick.imageData {
+        if let imageData = photo.imageData {
             cell.imageView.image = UIImage(data: imageData)
             cell.activityIndicator.stopAnimating()
         } else {
@@ -126,7 +126,7 @@ extension AlbumViewController {
         }
         
         cell.imageView.alpha = isEditing ? 0.75 : 1.0
-        cell.checkmarkImageView.isHidden = flicksToDeleteIndexPaths.contains(indexPath) ? false : true
+        cell.checkmarkImageView.isHidden = photosToDeleteIndexPaths.contains(indexPath) ? false : true
 
         return cell
     }
@@ -139,21 +139,21 @@ extension AlbumViewController {
 
         if self.isEditing {
             
-            if flicksToDeleteIndexPaths.contains(indexPath) {
-                flicksToDeleteIndexPaths.remove(indexPath)
+            if photosToDeleteIndexPaths.contains(indexPath) {
+                photosToDeleteIndexPaths.remove(indexPath)
             } else {
-                flicksToDeleteIndexPaths.insert(indexPath)
+                photosToDeleteIndexPaths.insert(indexPath)
             }
             
-            navigationItem.leftBarButtonItem?.isEnabled = !flicksToDeleteIndexPaths.isEmpty
+            navigationItem.leftBarButtonItem?.isEnabled = !photosToDeleteIndexPaths.isEmpty
             collectionView.reloadItems(at: [indexPath])
             
             return
         }
     
-        let flick = flickFetchedResultsController.object(at: indexPath)
-        if flick.imageData != nil {
-            performSegue(withIdentifier: "FlickDetailSegueID", sender:flick)
+        let photo = photoFetchedResultsController.object(at: indexPath)
+        if photo.imageData != nil {
+            performSegue(withIdentifier: "FlickDetailSegueID", sender:photo)
         }
     }
 }
@@ -173,13 +173,13 @@ extension AlbumViewController {
     
     @objc func trashBbiPressed(sender: UIBarButtonItem) {
         
-        var flicksToDelete:[Flick] = []
-        for indexPath in flicksToDeleteIndexPaths {
-            let flick = flickFetchedResultsController.object(at: indexPath)
-            flicksToDelete.append(flick)
+        var photosToDelete:[Photo] = []
+        for indexPath in photosToDeleteIndexPaths {
+            let photo = photoFetchedResultsController.object(at: indexPath)
+            photosToDelete.append(photo)
         }
         
-        dataController.deleteManagedObjects(objects: flicksToDelete) { error in
+        dataController.deleteManagedObjects(objects: photosToDelete) { error in
             if let error = error {
                 self.showOKAlert(error: error)
             }
@@ -188,19 +188,19 @@ extension AlbumViewController {
     
     @IBAction func reloadBbiPressed(_ sender: Any) {
 
-        let alert = UIAlertController(title: "Load New Album ?", message: "Existing phots will be deleted.", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Load New Album ?", message: "Existing photos will be deleted.", preferredStyle: .actionSheet)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
             
-            if let flicks = self.album.flicks?.allObjects as? [Flick] {
+            if let photos = self.pin.photos?.allObjects as? [Photo] {
                 
-                self.dataController.deleteManagedObjects(objects: flicks) { error in
+                self.dataController.deleteManagedObjects(objects: photos) { error in
                     if let error = error {
                         self.showOKAlert(error: error)
                     } else {
                         self.collectionView.reloadData()
                         self.updateUI(state: .preDownloading)
-                        self.dataController.reloadAlbum(album: self.album) { error in
+                        self.dataController.reloadPin(pin: self.pin) { error in
                             if let error = error {
                                 self.showOKAlert(error: error)
                             }
@@ -221,7 +221,7 @@ extension AlbumViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "FlickDetailSegueID" {
             let controller = segue.destination as! FlickDetailViewController
-            controller.flick = sender as? Flick
+            controller.photo = sender as? Photo
         }
     }
 }
@@ -231,41 +231,41 @@ extension AlbumViewController {
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
        
-        if controller == flickFetchedResultsController {
-            if !flicksToDeleteIndexPaths.isEmpty {
+        if controller == photoFetchedResultsController {
+            if !photosToDeleteIndexPaths.isEmpty {
                 collectionView.performBatchUpdates {
-                    self.collectionView.deleteItems(at: Array(flicksToDeleteIndexPaths))
+                    self.collectionView.deleteItems(at: Array(photosToDeleteIndexPaths))
                 }
                 setEditing(false, animated: false)
             }
         }
         
-        if controller == albumFetchedResultsController {
-            if album.flickDownloadComplete {
-                if let empty = flickFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
-                    updateUI(state: .emptyAlbum)
+        if controller == pinFetchedResultsController {
+            if pin.photoDownloadComplete {
+                if let empty = photoFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
+                    updateUI(state: .emptyPin)
                 } else {
                     updateUI(state: .normal)
                 }
                 progressView.progress = 0.0
             } else {
-                downloadedFlickCount = album.downloadedFlickImageCount()
+                downloadedPhotoCount = pin.downloadedPhotoImageCount()
             }
         }
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
-        if controller == flickFetchedResultsController {
+        if controller == photoFetchedResultsController {
             if type == .update {
                 if let indexPath = indexPath {
                     collectionView.reloadItems(at: [indexPath])
                     
-                    downloadedFlickCount += 1
-                    let total = album.flicks?.count ?? 1
-                    progressView.progress = Float(downloadedFlickCount) / Float(total)
+                    downloadedPhotoCount += 1
+                    let total = pin.photos?.count ?? 1
+                    progressView.progress = Float(downloadedPhotoCount) / Float(total)
                     
-                    if (total > 1) && (downloadedFlickCount == 1) {
+                    if (total > 1) && (downloadedPhotoCount == 1) {
                         updateUI(state: .downloading)
                     }
                 }
@@ -308,14 +308,14 @@ extension AlbumViewController {
             reloadBbi.isEnabled = true
             activityIndicator.stopAnimating()
             progressView.isHidden = true
-        case .noFlicksFound:
+        case .noPhotosFound:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
             reloadBbi.isEnabled = false
             activityIndicator.stopAnimating()
             progressView.isHidden = true
-        case .emptyAlbum:
+        case .emptyPin:
             navigationItem.leftBarButtonItem = nil
             navigationItem.leftBarButtonItem = nil
             editButtonItem.isEnabled = false
@@ -325,43 +325,43 @@ extension AlbumViewController {
         }
     }
     
-    fileprivate func configFlickFRC() {
+    fileprivate func configPhotoFRC() {
         
-        let fetchRequest:NSFetchRequest<Flick> = NSFetchRequest(entityName: "Flick")
+        let fetchRequest:NSFetchRequest<Photo> = NSFetchRequest(entityName: "Photo")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
-        let predicate = NSPredicate(format: "album = %@", album)
+        let predicate = NSPredicate(format: "pin = %@", pin)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
-        flickFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        flickFetchedResultsController.delegate = self
+        photoFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        photoFetchedResultsController.delegate = self
         do {
-            try flickFetchedResultsController.performFetch()
+            try photoFetchedResultsController.performFetch()
         } catch {
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }
     
-    fileprivate func configAlbumFRC() {
+    fileprivate func configPinFRC() {
         
-        let fetchRequest:NSFetchRequest<Album> = NSFetchRequest(entityName: "Album")
+        let fetchRequest:NSFetchRequest<Pin> = NSFetchRequest(entityName: "Pin")
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        let predicate = NSPredicate(format: "name = %@", album.name!)
+        let predicate = NSPredicate(format: "name = %@", pin.name!)
         fetchRequest.predicate = predicate
-        albumFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        albumFetchedResultsController.delegate = self
+        pinFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        pinFetchedResultsController.delegate = self
         do {
-            try albumFetchedResultsController.performFetch()
+            try pinFetchedResultsController.performFetch()
         } catch {
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }
     
-    @objc func handleEmptyAlbum() {
+    @objc func handleEmptyPin() {
         showOKAlert(title: "Empty Album", message: "Press reload to download new Flick album.")
     }
     
-    @objc func handleNoFlicksFound() {
+    @objc func handleNoPhotosFound() {
         showOKAlert(title: "No Flicks Found", message: "Unable to locate flicks in this geographic region.")
     }
 }
