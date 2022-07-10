@@ -15,11 +15,11 @@ import CoreLocation
 
 class FlickrAPI {
     
-    // constant for maximum download flicks per album
-    static let MAX_FLICKS = 50
+    // constant for maximum download photos per album
+    static let MAX_PHOTOS = 50
     
-    // store found flicks in array of dictionaries [[URLString:Title]]
-    static var foundFlicksArray:[[String:String]] = []
+    // store found photos in array of dictionaries [[URLString:Title]]
+    static var foundPhotosArray:[[String:String]] = []
 
     // user
     struct UserInfo {
@@ -109,7 +109,7 @@ extension FlickrAPI {
     
     /*
      handle geoSearch
-     Search geography and place found flicks into foundFlicksArray
+     Search geography and place found photos into foundPhotosArray
      */
     class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, LocalizedError?) -> Void) {
         
@@ -127,7 +127,7 @@ extension FlickrAPI {
                 return
             }
             // good response
-            foundFlicksArray = createRandomURLStringArray(response: response)
+            foundPhotosArray = createRandomURLStringArray(response: response)
             completion(true, nil)
         }
     }
@@ -167,10 +167,10 @@ extension FlickrAPI {
     }
     
     /*
-     handle flick data retrieval
-     Retrieve flick image in Data format
+     handle photo data retrieval
+     Retrieve photo image in Data format
      */
-    class func getFlickData(url: URL, completion: @escaping (Data?, LocalizedError?) -> Void) {
+    class func getPhotoData(url: URL, completion: @escaping (Data?, LocalizedError?) -> Void) {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
@@ -223,25 +223,25 @@ extension FlickrAPI {
     // parse FlickrSearchResponse and return [[urlString:title]], sorted by urlString
     class func createRandomURLStringArray(response: FlickrSearchResponse) -> [[String:String]] {
         
-        // array of flicks
+        // array of photos
         var photo = response.photos.photo
         
-        // random photo responses, limited to MAX_FLICKS
+        // random photo responses, limited to MAX_PHOTOS
         var randomPhotoArray:[PhotoResponse] = []
-        while (photo.count > 0) && (randomPhotoArray.count < MAX_FLICKS) {
+        while (photo.count > 0) && (randomPhotoArray.count < MAX_PHOTOS) {
             let randomIndex = Int.random(in: 0..<photo.count)
             randomPhotoArray.append(photo.remove(at: randomIndex))
         }
         
         // create a dictionary containing [URLString:Title]
         var dictionary:[String:String] = [:]
-        for (index, flick) in randomPhotoArray.enumerated() {
+        for (index, randomPhoto) in randomPhotoArray.enumerated() {
             
             // url creation per Flickr API
-            let urlString = APIInfo.urlHostBase + flick.server + "/" + flick.id + "_" + flick.secret + ".jpg"
+            let urlString = APIInfo.urlHostBase + randomPhoto.server + "/" + randomPhoto.id + "_" + randomPhoto.secret + ".jpg"
             
             // flick title
-            let title = (flick.title == "") ? ("Flick: \(index)") : flick.title
+            let title = (randomPhoto.title == "") ? ("Flick: \(index)") : randomPhoto.title
             
             dictionary[urlString] = title
         }

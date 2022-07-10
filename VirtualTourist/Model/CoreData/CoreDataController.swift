@@ -159,12 +159,12 @@ extension CoreDataController {
                     let privateAlbum = context.object(with: objectID) as! Album
                     
                     // test for no flicks found
-                    if FlickrAPI.foundFlicksArray.isEmpty {
+                    if FlickrAPI.foundPhotosArray.isEmpty {
                         privateAlbum.noFlicksFound = true
                         privateAlbum.flickDownloadComplete = true
                     } else {
                         // good flicks, continue creating new Flick objects
-                        for dictionary in FlickrAPI.foundFlicksArray {
+                        for dictionary in FlickrAPI.foundPhotosArray {
                             if let urlString = dictionary.keys.first, let title = dictionary.values.first {
                                 
                                 // create/config Flick
@@ -229,6 +229,113 @@ extension CoreDataController {
                 }
                 // download is complete. Set attribute and save.
                 privateAlbum.flickDownloadComplete = true
+                self.saveContext(context: context, completion: completion)
+            }
+        }
+    }
+}
+
+// MARK: Loading Pin and Photos
+extension CoreDataController {
+    
+    // (re)load an album
+    func reloadPin(pin:Pin, completion: @escaping (LocalizedError?) -> Void) {
+        /*
+         Loads new set of flicks into Album entity. A Flickr geosearch is performed. The result are parsed for urlString and title and used to create a Flick for each urlString.
+         */
+        
+        // reset flickDownloadComplete and noFlicksFound attributes
+        let objectID = pin.objectID
+        performBackgroundOp { context in
+            let privatePin = context.object(with: objectID) as! Pin
+            privatePin.photoDownloadComplete = false
+            privatePin.noPhotosFound = false
+            if !self.saveContext(context: context, completion: completion) {
+                return
+            }
+        }
+
+        // new geo search
+        FlickrAPI.geoSearchFlickr(latitude: pin.latitude, longitude: pin.longitude) { success, error in
+            
+            if success {
+                /*
+                 Create a new Flick for each URL found
+                 */
+                self.performBackgroundOp { context in
+                    let privatePin = context.object(with: objectID) as! Pin
+                    
+                    // test for no flicks found
+                    if FlickrAPI.foundPhotosArray.isEmpty {
+                        privatePin.noPhotosFound = true
+                        privatePin.photoDownloadComplete = true
+                    } else {
+                        // good flicks, continue creating new Flick objects
+                        for dictionary in FlickrAPI.foundPhotosArray {
+                            if let urlString = dictionary.keys.first, let title = dictionary.values.first {
+                                
+                                // create/config Flick
+                                let photo = Photo(context: context)
+                                photo.urlString = urlString
+                                photo.title = title
+                                photo.pin = privatePin
+                            }
+                        }
+                    }
+                    
+                    // save context
+                    if self.saveContext(context: context, completion: completion) {
+                        if !privatePin.noPhotosFound {
+                            /*
+                             If Flicks have been found, proceed to download Flicks
+                             */
+                            self.resumePhotoDownload(pin: privatePin, completion: completion)
+                        }
+                    } else {
+                        return
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(FlickrAPI.FlickrError.badFlickrDownload)
+                }
+            }
+        }
+    }
+    
+    // Download Flicks in an album
+    func resumePhotoDownload(pin:Pin, completion: @escaping (LocalizedError?) -> Void) {
+        /*
+         Download (or resume downloading) all Flicks in an album that have nil imageData.
+         */
+        let ojectID = pin.objectID
+        self.performBackgroundOp { context in
+            let privatePin = context.object(with: ojectID) as! Pin
+            
+            // retrieve Flicks and sort by urlString. This is the same order sorted in Album Collection view. Forces Flicks to download in same order as presented.
+            if var photos = privatePin.photos?.allObjects as? [Photo] {
+                photos = photos.sorted(by: {$0.urlString! > $1.urlString!})
+                
+                for photo in photos {
+                    // verify good URL and nil imageData (need new imageData)
+                    if let urlString = photo.urlString, let url = URL(string: urlString), photo.imageData == nil {
+                        // good URL and nil imageData for Flick...retireve imageData
+                        do {
+                            let data = try Data(contentsOf: url)
+                            photo.imageData = data
+                            if !self.saveContext(context: context, completion: completion) {
+                                return
+                            }
+                        } catch {
+                            DispatchQueue.main.async {
+                                completion(CoreDataError.badData)
+                            }
+                            return
+                        }
+                    }
+                }
+                // download is complete. Set attribute and save.
+                privatePin.photoDownloadComplete = true
                 self.saveContext(context: context, completion: completion)
             }
         }

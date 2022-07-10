@@ -11,7 +11,7 @@
 
 import Foundation
 
-// top level flick response
+// top level photo response
 struct FlickrSearchResponse: Codable {
     let stat: String
     let photos: PhotosResponse
@@ -22,7 +22,7 @@ struct FlickrSearchResponse: Codable {
     }
 }
 
-// returned flicks
+// returned photos
 struct PhotosResponse: Codable {
     let page: Int
     let pages: Int
@@ -39,7 +39,7 @@ struct PhotosResponse: Codable {
     }
 }
 
-// a single flick
+// a single photo
 struct PhotoResponse: Codable {
     let id: String
     let owner: String
