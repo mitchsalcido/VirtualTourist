@@ -149,22 +149,20 @@ extension CoreDataController {
         }
 
         // new geo search
-        FlickrAPI.geoSearchFlickr(latitude: pin.latitude, longitude: pin.longitude) { success, error in
+        FlickrAPI.geoSearchFlickr(latitude: pin.latitude, longitude: pin.longitude) { searchResults, error in
             
-            if success {
-                /*
-                 Create a new Photo for each URL found
-                 */
+            if let searchResults = searchResults {
+                
                 self.performBackgroundOp { context in
                     let privatePin = context.object(with: objectID) as! Pin
                     
                     // test for no photos found
-                    if FlickrAPI.foundPhotosArray.isEmpty {
+                    if searchResults.isEmpty {
                         privatePin.noPhotosFound = true
                         privatePin.photoDownloadComplete = true
                     } else {
                         // good photos, continue creating new Photo objects
-                        for dictionary in FlickrAPI.foundPhotosArray {
+                        for dictionary in searchResults {
                             if let urlString = dictionary.keys.first, let title = dictionary.values.first {
                                 
                                 // create/config Photo

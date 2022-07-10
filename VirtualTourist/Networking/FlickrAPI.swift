@@ -16,9 +16,6 @@ class FlickrAPI {
     
     // constant for maximum download photos per album
     static let MAX_PHOTOS = 50
-    
-    // store found photos in array of dictionaries [[URLString:Title]]
-    static var foundPhotosArray:[[String:String]] = []
 
     // user
     struct UserInfo {
@@ -108,13 +105,13 @@ extension FlickrAPI {
     
     /*
      handle geoSearch
-     Search geography and place found photos into foundPhotosArray
+     Search geography and provide completion results in array of dictionaries, each dictionary represents a photo, providing a URLString as key and string for photo title
      */
-    class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping (Bool, LocalizedError?) -> Void) {
+    class func geoSearchFlickr(latitude: Double, longitude: Double, completion: @escaping ([[String:String]]?, LocalizedError?) -> Void) {
         
         // verify good enpoint URL
         guard let url = Endpoints.searchGeo(lat: latitude, lon: longitude).url else {
-            completion(false, FlickrError.urlError)
+            completion(nil, FlickrError.urlError)
             return
         }
         
@@ -122,12 +119,11 @@ extension FlickrAPI {
         taskGET(url: url, responseType: FlickrSearchResponse.self) { response, error in
             guard let response = response else {
                 // bad response
-                completion(false, FlickrError.urlError)
+                completion(nil, FlickrError.urlError)
                 return
             }
             // good response
-            foundPhotosArray = createRandomURLStringArray(response: response)
-            completion(true, nil)
+            completion(createRandomURLStringArray(response: response), nil)
         }
     }
     
