@@ -220,7 +220,7 @@ extension FlickrAPI {
 // MARK: Helper methods
 extension FlickrAPI {
     
-    // parse FlickrSearchResponse and return [[urlString:title]]
+    // parse FlickrSearchResponse and return [[urlString:title]], sorted by urlString
     class func createRandomURLStringArray(response: FlickrSearchResponse) -> [[String:String]] {
         
         // array of flicks

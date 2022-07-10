@@ -9,13 +9,13 @@
         <relationship name="flicks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Flick" inverseName="album" inverseEntity="Flick"/>
     </entity>
     <entity name="Flick" representedClassName="Flick" syncable="YES" codeGenerationType="class">
-        <attribute name="imageData" optional="YES" attributeType="Binary"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="urlString" optional="YES" attributeType="String"/>
         <relationship name="album" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Album" inverseName="flicks" inverseEntity="Album"/>
     </entity>
     <elements>
         <element name="Album" positionX="-320.72265625" positionY="1.21875" width="128" height="119"/>
-        <element name="Flick" positionX="-63" positionY="-18" width="128" height="103"/>
+        <element name="Flick" positionX="-63" positionY="-18" width="128" height="89"/>
     </elements>
 </model>

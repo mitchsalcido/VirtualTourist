@@ -78,7 +78,7 @@ class CoreDataController {
 // MARK: Background Op, Saving/Deleting Managed Objects
 extension CoreDataController {
 
-    // perform an operation on provate queue
+    // perform an operation on private queue
     func performBackgroundOp(completion: @escaping (NSManagedObjectContext) -> Void) {
         container.performBackgroundTask { context in
             context.automaticallyMergesChangesFromParent = true
@@ -115,7 +115,7 @@ extension CoreDataController {
         }
         self.performBackgroundOp { context in
             /*
-             On provate queue, retrieve objects into private queue and delete
+             Retrieve objects into private queue and delete
              */
             for objectID in objectIDs {
                 let privateObject = context.object(with: objectID)
@@ -134,7 +134,7 @@ extension CoreDataController {
     // (re)load an album
     func reloadAlbum(album:Album, completion: @escaping (LocalizedError?) -> Void) {
         /*
-         Loads new set of flicks into Album entity. A Flickr geosearch os performed. The result are parsed for urlString and title and used to create a Flick for each urlString.
+         Loads new set of flicks into Album entity. A Flickr geosearch is performed. The result are parsed for urlString and title and used to create a Flick for each urlString.
          */
         
         // reset flickDownloadComplete and noFlicksFound attributes
@@ -205,7 +205,7 @@ extension CoreDataController {
         self.performBackgroundOp { context in
             let privateAlbum = context.object(with: ojectID) as! Album
             
-            // retrieve Flicks and sort by urlString. This is the same order sorted in Album Collection view. Forces Flicks to download in same order as presentation.
+            // retrieve Flicks and sort by urlString. This is the same order sorted in Album Collection view. Forces Flicks to download in same order as presented.
             if var flicks = privateAlbum.flicks?.allObjects as? [Flick] {
                 flicks = flicks.sorted(by: {$0.urlString! > $1.urlString!})
                 
