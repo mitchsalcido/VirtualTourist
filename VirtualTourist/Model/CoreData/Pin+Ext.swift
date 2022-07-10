@@ -9,6 +9,8 @@ import Foundation
 import CoreData
 
 extension Pin {
+    
+    // count of Photo's with non-nil imageData (i.e. downloaded images)
     func downloadedPhotoImageCount() -> Int {
         guard let photos = self.photos as? Set<Photo> else {
             return 0

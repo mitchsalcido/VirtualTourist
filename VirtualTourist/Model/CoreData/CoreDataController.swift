@@ -6,7 +6,7 @@
 //
 /*
  About CoreDataController:
- Handle setup and config of Core Data stack. Provide functions for saving, deleting, and background operations. Also functionality for downloading albums from Flickr
+ Handle setup and config of Core Data stack. Provide functions for saving, deleting, and background operations. Also functionality for downloading Pins/Photos from Flickr
  */
 import Foundation
 import CoreData

@@ -85,7 +85,7 @@ extension MapViewController {
             }
             mapView.removeAnnotation(annotation)
         } else {
-            performSegue(withIdentifier: "AlbumSegueID", sender: annotation.pin)
+            performSegue(withIdentifier: "PinSegueID", sender: annotation.pin)
         }
     }
 }
@@ -94,7 +94,7 @@ extension MapViewController {
 extension MapViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "AlbumSegueID" {
+        if segue.identifier == "PinSegueID" {
             let controller = segue.destination as! PinViewController
             controller.pin = sender as? Pin
         }

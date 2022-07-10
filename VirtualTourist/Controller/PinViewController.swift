@@ -140,7 +140,7 @@ extension PinViewController {
     
         let photo = photoFetchedResultsController.object(at: indexPath)
         if photo.imageData != nil {
-            performSegue(withIdentifier: "FlickDetailSegueID", sender:photo)
+            performSegue(withIdentifier: "PhotoDetailSegueID", sender:photo)
         }
     }
 }
@@ -206,7 +206,7 @@ extension PinViewController {
 extension PinViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "FlickDetailSegueID" {
+        if segue.identifier == "PhotoDetailSegueID" {
             let controller = segue.destination as! PhotoDetailViewController
             controller.photo = sender as? Photo
         }
