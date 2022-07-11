@@ -15,6 +15,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     var dataController:CoreDataController!
+    var dragAnnotation:PinAnnotation!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,12 +33,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     @IBAction func longPressInMapViewDetected(_ sender: Any) {
         let longPressGr = sender as! UILongPressGestureRecognizer
-        if longPressGr.state != .began {
-            return
-        }
         let pressLocation = longPressGr.location(in: mapView)
         let coordinate = mapView.convert(pressLocation, toCoordinateFrom: mapView)
-        newAnnotation(coordinate)
+        
+        switch longPressGr.state {
+        case .began:
+            dragAnnotation = PinAnnotation()
+            dragAnnotation.coordinate = coordinate
+            mapView.addAnnotation(dragAnnotation)
+        case .changed:
+            dragAnnotation.coordinate = coordinate
+        case .ended:
+            configureAnnotation(dragAnnotation)
+        default:
+            break
+        }
     }
 }
 
@@ -118,7 +128,8 @@ extension MapViewController {
         
         for pin in pins {
             let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
-            let annotation = PinAnnotation(coordinate: coordinate)
+            let annotation = PinAnnotation()
+            annotation.coordinate = coordinate
             annotation.title = pin.name
             annotation.pin = pin
             mapView.addAnnotation(annotation)
@@ -133,10 +144,10 @@ extension MapViewController {
         }
     }
     
-    fileprivate func newAnnotation(_ coordinate: CLLocationCoordinate2D) {
-        let annotation = PinAnnotation(coordinate: coordinate)
+    fileprivate func configureAnnotation(_ annotation:PinAnnotation) {
         
-        let location = CLLocation(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude)
+        let coordinate = annotation.coordinate
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         FlickrAPI.reverseGeoCode(location: location) { name, error in
             
             if let name = name {
