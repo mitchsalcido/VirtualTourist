@@ -100,11 +100,17 @@ class PinViewController: UIViewController, UICollectionViewDelegate, UICollectio
         if pin.noPhotosFound {
             // no photos in geographic region
             updateUI(state: .noPhotosFound)
-            perform(#selector(handleNoPhotosFound), with: nil, afterDelay: 1.0)
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
+                // delay alert for asthetic feel
+                self.showOKAlert(title: "No photos found", message: "No photos available in this geographic region.")
+            }
         } else if !pin.noPhotosFound && pin.photoDownloadComplete && zeroCount {
             // photos available, but not downloaded
             updateUI(state: .emptyPin)
-            perform(#selector(handleEmptyPin), with: nil, afterDelay: 1.0)
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
+                // delay alert for asthetic feel
+                self.showOKAlert(title: "Empty Album", message: "Press reload to download new set of photos.")
+            }
         } else if !pin.noPhotosFound && pin.photoDownloadComplete && !zeroCount {
             // good download with photos present
             updateUI(state: .normal)
@@ -435,13 +441,5 @@ extension PinViewController {
         } catch {
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
-    }
-    
-    @objc func handleEmptyPin() {
-        showOKAlert(title: "Empty Album", message: "Press reload to download new Flick album.")
-    }
-    
-    @objc func handleNoPhotosFound() {
-        showOKAlert(title: "No Flicks Found", message: "Unable to locate flicks in this geographic region.")
     }
 }
