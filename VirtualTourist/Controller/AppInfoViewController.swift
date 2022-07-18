@@ -4,6 +4,9 @@
 //
 //  Created by Mitchell Salcido on 7/6/22.
 //
+/*
+ About AppInfoViewController:
+ */
 
 import UIKit
 

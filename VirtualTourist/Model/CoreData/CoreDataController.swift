@@ -153,6 +153,7 @@ extension CoreDataController {
             
             if let searchResults = searchResults {
                 
+                // create new Photo's on private queue
                 self.performBackgroundOp { context in
                     let privatePin = context.object(with: objectID) as! Pin
                     

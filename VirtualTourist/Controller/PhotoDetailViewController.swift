@@ -4,6 +4,9 @@
 //
 //  Created by Mitchell Salcido on 6/30/22.
 //
+/*
+ About PhotoDetailViewController:
+ */
 
 import UIKit
 

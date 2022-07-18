@@ -171,7 +171,7 @@ extension FlickrAPI {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
                 // bad return data
-                completion(nil, FlickrError.urlError)
+                completion(nil, FlickrError.badFlickrDownload)
                 return
             }
             // good data
@@ -216,7 +216,7 @@ extension FlickrAPI {
 // MARK: Helper methods
 extension FlickrAPI {
     
-    // parse FlickrSearchResponse and return [[urlString:title]], sorted by urlString
+    // parse FlickrSearchResponse and return [[urlString:title]], sorted by urlString, randomized
     class func createRandomURLStringArray(response: FlickrSearchResponse) -> [[String:String]] {
         
         // array of photos
@@ -239,10 +239,11 @@ extension FlickrAPI {
             // flick title
             let title = (randomPhoto.title == "") ? ("Flick: \(index)") : randomPhoto.title
             
+            // add dictionary element
             dictionary[urlString] = title
         }
         
-        // sort by url string..same order that's used in AlbumView..aids in Album collection view, forcing images to download and appear in order
+        // sort by url string..same order that's used in PinViewController..aids in Pin collection view, forcing images to download and appear in order
         var urlStringArray:[[String:String]] = []
         for key in dictionary.keys.sorted() {
             if let value = dictionary[key] {
