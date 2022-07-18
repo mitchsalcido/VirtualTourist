@@ -250,37 +250,47 @@ extension PinViewController {
         /*
          Handle reloading a new photo set. Present an alert with cancel and proceed action.
          */
-        let alert = UIAlertController(title: "Load New Album ?", message: "Existing photos will be deleted.", preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
-            
-            /*
-             Proceed action. Retrieve and delete existing photos.
-             */
-            if let photos = self.pin.photos?.allObjects as? [Photo] {
+        
+        let downloadBlock = {
+            self.collectionView.reloadData()
+            self.updateUI(state: .preDownloading)
+            self.dataController.reloadPin(pin: self.pin) { error in
+                if let error = error {
+                    self.showOKAlert(error: error)
+                }
+            }
+        }
+        
+        if let empty = photoFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
+            downloadBlock()
+        } else {
+         
+            let alert = UIAlertController(title: "Load New Album ?", message: "Existing photos will be deleted.", preferredStyle: .alert)
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+            let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
                 
-                self.dataController.deleteManagedObjects(objects: photos) { error in
-                    if let error = error {
-                        // bad deletion
-                        self.showOKAlert(error: error)
-                    } else {
-                        /*
-                         Good deletion. Proceed with reload after updating UI to reflect new download state.
-                         */
-                        self.collectionView.reloadData()
-                        self.updateUI(state: .preDownloading)
-                        self.dataController.reloadPin(pin: self.pin) { error in
-                            if let error = error {
-                                self.showOKAlert(error: error)
-                            }
+                /*
+                 Proceed action. Retrieve and delete existing photos.
+                 */
+                if let photos = self.pin.photos?.allObjects as? [Photo] {
+                    
+                    self.dataController.deleteManagedObjects(objects: photos) { error in
+                        if let error = error {
+                            // bad deletion
+                            self.showOKAlert(error: error)
+                        } else {
+                            /*
+                             Good deletion. Proceed with reload after updating UI to reflect new download state.
+                             */
+                            downloadBlock()
                         }
                     }
                 }
             }
+            alert.addAction(proceedAction)
+            alert.addAction(cancelAction)
+            present(alert, animated: true)
         }
-        alert.addAction(proceedAction)
-        alert.addAction(cancelAction)
-        present(alert, animated: true)
     }
 }
 
