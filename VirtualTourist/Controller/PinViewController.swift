@@ -251,6 +251,7 @@ extension PinViewController {
          Handle reloading a new photo set. Present an alert with cancel and proceed action.
          */
         
+        // block that perform actual download and UI update
         let downloadBlock = {
             self.collectionView.reloadData()
             self.updateUI(state: .preDownloading)
@@ -261,6 +262,9 @@ extension PinViewController {
             }
         }
         
+        /*
+         Test for empty photos. If empty immediately proceed with download. Otherwise present an alert for user warning of overwriting existing photos.
+         */
         if let empty = photoFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
             downloadBlock()
         } else {
@@ -279,14 +283,13 @@ extension PinViewController {
                             // bad deletion
                             self.showOKAlert(error: error)
                         } else {
-                            /*
-                             Good deletion. Proceed with reload after updating UI to reflect new download state.
-                             */
+                            // good deletion. Proceed with download.
                             downloadBlock()
                         }
                     }
                 }
             }
+            // add actions and present alert.
             alert.addAction(proceedAction)
             alert.addAction(cancelAction)
             present(alert, animated: true)
