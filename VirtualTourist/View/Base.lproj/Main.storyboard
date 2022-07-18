@@ -172,7 +172,7 @@
                                 <rect key="frame" x="0.0" y="813" width="414" height="49"/>
                                 <items>
                                     <barButtonItem systemItem="flexibleSpace" id="1es-DR-Bv1"/>
-                                    <barButtonItem systemItem="refresh" id="dxf-Ht-PtP">
+                                    <barButtonItem enabled="NO" systemItem="refresh" id="dxf-Ht-PtP">
                                         <connections>
                                             <action selector="reloadBbiPressed:" destination="POC-S5-Eis" id="AWG-JW-CxT"/>
                                         </connections>

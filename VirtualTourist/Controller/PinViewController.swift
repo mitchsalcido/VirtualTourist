@@ -377,50 +377,42 @@ extension PinViewController {
 extension PinViewController {
     
     func updateUI(state: UIState) {
+        /*
+         Configure state of UI elements based on download state of photos
+         */
         
+        // workaround. "Virtual Tourist" back text in left nav button doesn't display correctly unless this is set to nil twice.
+        navigationItem.leftBarButtonItem = nil
+        navigationItem.leftBarButtonItem = nil
+        
+        // default state for UI elements
+        reloadBbi.isEnabled = false
+        progressView.isHidden = true
+        activityIndicator.stopAnimating()
+        editButtonItem.isEnabled = false
+
         switch state {
         case .editing:
+            // editing. Add trash button on left nav bar
             let bbi = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
+            bbi.isEnabled = false
             navigationItem.leftBarButtonItem = bbi
-            navigationItem.leftBarButtonItem?.isEnabled = false
-            reloadBbi.isEnabled = false
-            activityIndicator.stopAnimating()
-            progressView.isHidden = true
         case .preDownloading:
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
-            editButtonItem.isEnabled = false
-            reloadBbi.isEnabled = false
+            // preDownload. Animate activityIndicator
             activityIndicator.startAnimating()
-            progressView.isHidden = true
         case .downloading:
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
-            editButtonItem.isEnabled = false
-            reloadBbi.isEnabled = false
-            activityIndicator.stopAnimating()
+            // downloading. Show progress
             progressView.isHidden = false
         case .normal:
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
+            // normal. Show edit and reload
             editButtonItem.isEnabled = true
             reloadBbi.isEnabled = true
-            activityIndicator.stopAnimating()
-            progressView.isHidden = true
         case .noPhotosFound:
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
-            editButtonItem.isEnabled = false
-            reloadBbi.isEnabled = false
-            activityIndicator.stopAnimating()
-            progressView.isHidden = true
+            // no photos in geographic region. Use default UI settings
+            break
         case .emptyPin:
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.leftBarButtonItem = nil
-            editButtonItem.isEnabled = false
+            // empty album. Allow reload
             reloadBbi.isEnabled = true
-            activityIndicator.stopAnimating()
-            progressView.isHidden = true
         }
     }
     

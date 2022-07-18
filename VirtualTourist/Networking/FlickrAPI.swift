@@ -15,7 +15,7 @@ import CoreLocation
 class FlickrAPI {
     
     // constant for maximum download photos per album
-    static let MAX_PHOTOS = 50
+    static let MAX_PHOTOS = 5
 
     // user
     struct UserInfo {
