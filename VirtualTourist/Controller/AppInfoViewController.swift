@@ -6,6 +6,7 @@
 //
 /*
  About AppInfoViewController:
+ Present controller with views showing app info and instructions
  */
 
 import UIKit
@@ -16,6 +17,7 @@ class AppInfoViewController: UIViewController {
         super.viewDidLoad()
     }
     
+    // dismiss
     @IBAction func doneButtonPressed(_ sender: Any) {
         dismiss(animated: true)
     }

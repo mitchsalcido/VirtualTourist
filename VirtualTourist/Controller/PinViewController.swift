@@ -49,7 +49,6 @@ class PinViewController: UIViewController, UICollectionViewDelegate, UICollectio
      */
     var photosToDeleteIndexPaths:Set<IndexPath> = []
     
-    
     // default image to display in cells when photos are being downloaded
     let defaultImage:UIImage = UIImage(imageLiteralResourceName: "DefaultImage")
     
@@ -251,7 +250,7 @@ extension PinViewController {
          Handle reloading a new photo set. Present an alert with cancel and proceed action.
          */
         
-        // block that perform actual download and UI update
+        // block that performs actual download and UI update
         let downloadBlock = {
             self.collectionView.reloadData()
             self.updateUI(state: .preDownloading)
@@ -266,9 +265,12 @@ extension PinViewController {
          Test for empty photos. If empty immediately proceed with download. Otherwise present an alert for user warning of overwriting existing photos.
          */
         if let empty = photoFetchedResultsController.fetchedObjects?.isEmpty, empty == true {
+            // no photos. Proceed with download
             downloadBlock()
         } else {
          
+            // photos present. Show alert to warn user of overwriting existing photos.
+            
             let alert = UIAlertController(title: "Load New Album ?", message: "Existing photos will be deleted.", preferredStyle: .alert)
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
             let proceedAction = UIAlertAction(title: "Proceed", style: .destructive) { action in
@@ -276,8 +278,11 @@ extension PinViewController {
                 /*
                  Proceed action. Retrieve and delete existing photos.
                  */
+                
+                // retrieve all photos in Pin
                 if let photos = self.pin.photos?.allObjects as? [Photo] {
                     
+                    // delete all photos
                     self.dataController.deleteManagedObjects(objects: photos) { error in
                         if let error = error {
                             // bad deletion
@@ -381,7 +386,7 @@ extension PinViewController {
          Configure state of UI elements based on download state of photos
          */
         
-        // workaround. "Virtual Tourist" back text in left nav button doesn't display correctly unless this is set to nil twice.
+        // workaround. "Virtual Tourist" back text in left nav button doesn't display correctly unless property is set to nil twice.
         navigationItem.leftBarButtonItem = nil
         navigationItem.leftBarButtonItem = nil
         
@@ -396,6 +401,7 @@ extension PinViewController {
             // editing. Add trash button on left nav bar
             let bbi = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(trashBbiPressed(sender:)))
             bbi.isEnabled = false
+            editButtonItem.isEnabled = true
             navigationItem.leftBarButtonItem = bbi
         case .preDownloading:
             // preDownload. Animate activityIndicator
@@ -417,33 +423,51 @@ extension PinViewController {
     }
     
     fileprivate func configPhotoFRC() {
+        /*
+         Fetch request and fetched results controller config for Photo's
+         */
         
+        // config request with sort and predicate
         let fetchRequest:NSFetchRequest<Photo> = NSFetchRequest(entityName: "Photo")
         let sortDescriptor = NSSortDescriptor(key: "urlString", ascending: false)
         let predicate = NSPredicate(format: "pin = %@", pin)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = predicate
+        
+        // FRC, set delegate
         photoFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         photoFetchedResultsController.delegate = self
+        
+        // perform fetch
         do {
             try photoFetchedResultsController.performFetch()
         } catch {
+            // bad fetch. Show error
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }
     
     fileprivate func configPinFRC() {
+        /*
+         Fetch request and fetched results controller config for Pin
+         */
         
+        // config request with sort and predicate
         let fetchRequest:NSFetchRequest<Pin> = NSFetchRequest(entityName: "Pin")
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         let predicate = NSPredicate(format: "name = %@", pin.name!)
         fetchRequest.predicate = predicate
+        
+        // FRC, set delegate
         pinFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         pinFetchedResultsController.delegate = self
+        
+        // perform fetch
         do {
             try pinFetchedResultsController.performFetch()
         } catch {
+            // bad fetch. Show error
             showOKAlert(error: CoreDataController.CoreDataError.badFetch)
         }
     }

@@ -109,10 +109,8 @@ extension CoreDataController {
         /*
          Retrieve object IDs for objects, retrieve objects from private context and delete
          */
-        var objectIDs:[NSManagedObjectID] = []
-        for object in objects {
-            objectIDs.append(object.objectID)
-        }
+
+        let objectIDs = objects.map {$0.objectID}
         self.performBackgroundOp { context in
             /*
              Retrieve objects into private queue and delete

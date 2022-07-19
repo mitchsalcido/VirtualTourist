@@ -15,7 +15,7 @@ import CoreLocation
 class FlickrAPI {
     
     // constant for maximum download photos per album
-    static let MAX_PHOTOS = 5
+    static let MAX_PHOTOS = 50
 
     // user
     struct UserInfo {
@@ -129,11 +129,11 @@ extension FlickrAPI {
     
     /*
      handle reverse geocoding
-     Retrieve a sting name (city name, state name, etc) for location
+     Retrieve a string name (city name, state name, etc) for location
      */
     class func reverseGeoCode(location: CLLocation, completion: @escaping (String?, LocalizedError?) -> Void) {
         /*
-         Use reverseGeocodeLocation to retrieve appropriate name string. This string is used for map annotation title and album name
+         Use reverseGeocodeLocation to retrieve appropriate name string. This string is used for map annotation title and Pin name
          */
         let geoCoder = CLGeocoder()
         geoCoder.reverseGeocodeLocation(location) { placemarks, error in
