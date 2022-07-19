@@ -141,7 +141,7 @@ class PinViewController: UIViewController, UICollectionViewDelegate, UICollectio
         }
         
         // reload
-        collectionView.reloadData()
+        collectionView.reloadSections(IndexSet(integer: 0))
     }
 }
 
